@@ -17,7 +17,24 @@
         "command": "codetrack.helloWorld",
         "title": "Hello World"
       }
-    ]
+    ],
+    "viewsContainers": {
+        "activitybar": [
+            {
+                "id": "codetrackViewContainer",
+                "title": "CodeTrack",
+                "icon": "$(note)"
+            }
+        ]
+    },
+    "views": {
+        "codetrackViewContainer": [
+            {
+                "id": "codetrackView",
+                "name": "CodeTrack"
+            }
+        ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",

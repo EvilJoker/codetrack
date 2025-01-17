@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeTrack</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 10px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            margin-bottom: 20px;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background-color: #007acc;
+            color: white;
+            border-color: #007acc;
+        }
+        .content {
+            border: 1px solid #ccc;
+            padding: 10px;
+            flex: 1;
+        }
+        .question-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .question-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        .question-item:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>CodeTrack</h1>
+        </div>
+        <div class="tabs">
+            <div class="tab active" data-tab="questions">Questions</div>
+            <div class="tab" data-tab="tags">Tags</div>
+        </div>
+        <div class="content">
+            <div id="questions" class="tab-content active">
+                <ul class="question-list">
+                    <li class="question-item">Question 1</li>
+                    <li class="question-item">Question 2</li>
+                    <li class="question-item">Question 3</li>
+                </ul>
+            </div>
+            <div id="tags" class="tab-content">
+                <ul class="tag-list">
+                    <li class="tag-item">Tag 1</li>
+                    <li class="tag-item">Tag 2</li>
+                    <li class="tag-item">Tag 3</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.getAttribute('data-tab');
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
