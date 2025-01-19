@@ -16,6 +16,10 @@
       {
         "command": "codetrack.helloWorld",
         "title": "Hello World"
+      },
+      {
+        "command": "codetrack.openProblemListView",
+        "title": "打开题目列表"
       }
     ],
     "viewsContainers": {
@@ -30,8 +34,8 @@
     "views": {
         "codetrackViewContainer": [
             {
-                "id": "codetrackView",
-                "name": "CodeTrack"
+                "id": "problemListView",
+                "name": "题目列表"
             }
         ]
     }
