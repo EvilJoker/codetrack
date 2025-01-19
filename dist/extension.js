@@ -44,7 +44,7 @@ exports.deactivate = deactivate;
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 const vscode = __importStar(__webpack_require__(1));
-const problemManager_1 = __webpack_require__(2);
+const problemManager_1 = __webpack_require__(4);
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 function activate(context) {
@@ -60,22 +60,10 @@ function activate(context) {
         vscode.window.showInformationMessage('Hello World from codetrack!');
     });
     context.subscriptions.push(disposableTest);
-    // 添加命令以打开 Webview 面板
-    let disposable = vscode.commands.registerCommand('codetrack.openView', async () => {
-        const panel = vscode.window.createWebviewPanel('codetrackView', 'CodeTrack', vscode.ViewColumn.One, {});
-        // 加载 HTML 内容
-        panel.webview.html = await getWebviewContent(context);
-    });
-    context.subscriptions.push(disposable);
     // 添加 TreeView 提供者
     const problemDataProvider = new problemManager_1.ProblemDataProvider(context);
     const problemTreeView = vscode.window.createTreeView('problemListView', { treeDataProvider: problemDataProvider, showCollapseAll: true });
     context.subscriptions.push(problemTreeView);
-}
-async function getWebviewContent(context) {
-    const htmlPath = vscode.Uri.file(context.asAbsolutePath('src/panel.html'));
-    const htmlContent = await vscode.workspace.fs.readFile(htmlPath);
-    return htmlContent.toString();
 }
 // This method is called when your extension is deactivated
 function deactivate() { }
@@ -89,6 +77,18 @@ module.exports = require("vscode");
 
 /***/ }),
 /* 2 */
+/***/ ((module) => {
+
+module.exports = require("fs");
+
+/***/ }),
+/* 3 */
+/***/ ((module) => {
+
+module.exports = require("path");
+
+/***/ }),
+/* 4 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -129,8 +129,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ProblemItem = exports.ProblemDataProvider = void 0;
 exports.loadProblems = loadProblems;
 const vscode = __importStar(__webpack_require__(1));
-const fs = __importStar(__webpack_require__(3));
-const path = __importStar(__webpack_require__(4));
+const fs = __importStar(__webpack_require__(2));
+const path = __importStar(__webpack_require__(3));
 class ProblemDataProvider {
     context;
     constructor(context) {
@@ -247,18 +247,6 @@ function loadProblems(extensionPath) {
     return problems;
 }
 
-
-/***/ }),
-/* 3 */
-/***/ ((module) => {
-
-module.exports = require("fs");
-
-/***/ }),
-/* 4 */
-/***/ ((module) => {
-
-module.exports = require("path");
 
 /***/ })
 /******/ 	]);

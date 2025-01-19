@@ -24,32 +24,12 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(disposableTest);
 
-    // 添加命令以打开 Webview 面板
-    let disposable = vscode.commands.registerCommand('codetrack.openView', async () => {
-        const panel = vscode.window.createWebviewPanel(
-            'codetrackView',
-            'CodeTrack',
-            vscode.ViewColumn.One,
-            {}
-        );
-
-        // 加载 HTML 内容
-        panel.webview.html = await getWebviewContent(context);
-    });
-
-    context.subscriptions.push(disposable);
 
     // 添加 TreeView 提供者
     const problemDataProvider = new ProblemDataProvider(context);
     const problemTreeView = vscode.window.createTreeView('problemListView', { treeDataProvider: problemDataProvider, showCollapseAll: true });
     context.subscriptions.push(problemTreeView);
 
-}
-
-async function getWebviewContent(context: vscode.ExtensionContext): Promise<string> {
-    const htmlPath = vscode.Uri.file(context.asAbsolutePath('src/panel.html'));
-    const htmlContent = await vscode.workspace.fs.readFile(htmlPath);
-    return htmlContent.toString();
 }
 
 // This method is called when your extension is deactivated
