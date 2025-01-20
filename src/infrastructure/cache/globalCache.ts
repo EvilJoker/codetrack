@@ -12,5 +12,11 @@ export const globalCache = {
         difficulty_mid: true,
         difficulty_hard: true,
         order: ORDER_ASC
-    }
+    } ,
+    tags:[] as string[],
+    filtertags:[] as string[],
+    isInit: true,
+    problems:[] as any[],
+    path: "" 
 };
+
