@@ -27,10 +27,8 @@ export function activate(context: vscode.ExtensionContext) {
 
     // 注册 WebviewView
     context.subscriptions.push(
-        vscode.window.registerWebviewViewProvider('filterView',new FilterViewProvider(context)
-        )
+        vscode.window.registerWebviewViewProvider('filterView', new FilterViewProvider(context))
     );
-
 
     // 添加 TreeView 提供者
     const problemDataProvider = new ProblemDataProvider(context);

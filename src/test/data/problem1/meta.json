@@ -1,0 +1,16 @@
+{
+    "id": "1",
+    "name": "Two Sum",
+    "name_zh": "Two Sum",
+    "description": "Given an array of integers, return indices of the two numbers such that they add up to a specific target.",
+    "description_zh": "Given an array of integers, return indices of the two numbers such that they add up to a specific target.",
+    "meta": {
+        "difficulty": "easy",
+        "recommend": "baisc" 
+    },
+    "info": {
+        "updateTime": "2023-10-01T12:00:00Z",
+        "status": "plan"
+    },
+    "tags": ["array", "hash-table"]
+}
