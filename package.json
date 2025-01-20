@@ -20,24 +20,43 @@
       {
         "command": "codetrack.openProblemListView",
         "title": "打开题目列表"
+      },
+      {
+        "command": "codetrack.refresh_filterView",
+        "title": "刷新",
+        "icon": "$(refresh)"
       }
     ],
     "viewsContainers": {
-        "activitybar": [
-            {
-                "id": "codetrackViewContainer",
-                "title": "CodeTrack",
-                "icon": "$(note)"
-            }
-        ]
+      "activitybar": [
+        {
+          "id": "codetrackViewContainer",
+          "title": "CodeTrack",
+          "icon": "$(note)"
+        }
+      ]
     },
     "views": {
-        "codetrackViewContainer": [
-            {
-                "id": "problemListView",
-                "name": "题目列表"
-            }
-        ]
+      "codetrackViewContainer": [
+        {
+          "id": "filterView",
+          "name": "过滤",
+          "type": "webview"
+        },
+        {
+          "id": "problemListView",
+          "name": "题目列表"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "codetrack.refresh_filterView",
+          "when": "view == filterView",
+          "group": "navigation"
+        }
+      ]
     }
   },
   "scripts": {
@@ -52,7 +71,6 @@
     "test": "vscode-test",
     "prepare": "husky"
   },
-
   "devDependencies": {
     "@commitlint/cli": "^19.6.1",
     "@commitlint/config-conventional": "^19.6.0",
