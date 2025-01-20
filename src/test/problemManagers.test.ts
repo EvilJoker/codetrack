@@ -19,11 +19,11 @@ suite('ProblemManager Tests', () => {
 
     test('should load problems from the problems directory', () => {
         context = { extensionPath: path.resolve(__dirname, '../../src/test/data') } as vscode.ExtensionContext;
-        console.log(path.resolve(__dirname, '../../src/test/data') );
+        // console.log(path.resolve(__dirname, '../../src/test/data') );
         problemDataProvider = new ProblemDataProvider(context);
         const problems = loadProblems(path.resolve(__dirname, '../../src/test/data'));
-        assert.strictEqual(problems.length, 5); // 修改: assert.equal(problems.length, 5);
-        // assert.strictEqual(problems[0].name, 'Two Sum'); // 修改: assert.propertyVal(problems[0], 'name', '问题1')
+        assert.strictEqual(problems.length, 1); // 修改: assert.equal(problems.length, 5);
+        assert.strictEqual(problems[0].name, 'Two Sum'); // 修改: assert.propertyVal(problems[0], 'name', '问题1')
     });
 
     test('should return default problems if the problems directory does not exist', () => {
