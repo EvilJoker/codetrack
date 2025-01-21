@@ -1,6 +1,6 @@
 # codetrack README
 
-This is the README for your extension "codetrack". After writing up a brief description, we recommend including the following sections.
+CodeTrack is a vscode extension for locally manger algorithm problems Git-powered, helping you stay organized and monitor your progress effectively. CodeTrack 是一个由 Git 提供支持的本地管理算法问题的 vscode 扩展，可帮助您保持井然有序并有效监控进度。
 
 ## Features
 
@@ -33,19 +33,7 @@ Calling out known issues can help limit users opening duplicate issues against y
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
+[changelog](https://github.com/EvilJoker/codetrack/CHANGELOG.md)
 
 ---
 

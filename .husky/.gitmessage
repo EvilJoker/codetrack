@@ -1,14 +1,37 @@
-# 下面是 commit 信息模板，记得根据需要修改
-# 提交类型（fix, feat, docs, style, refactor, perf, test 等）
-feat(a): <短小的描述>
+feat(x): x
 
-- x
-- x
-# 详细描述（可选）
-# 在这里写更详细的提交信息
-# 如果需要，可以描述问题和解决方案
+- x:
+# 示例：
+#feat(user): 添加用户登录功能
+#
+#- 增加了用户身份认证模块
+#- 支持 OAuth2 登录
+#
+# BREAKING CHANGE: 旧版登录接口已被移除
+#
+# Fixes #123
 
-# 关联的任务 ID（如果有）
-# 例如：TASK-123
-
-# 提交时记得去掉此模板中的注释
+# 格式
+# <type>(<scope>): <subject>
+#
+# type(必填):
+#   feat     新功能(feature)
+#   fix      修复 bug
+#   docs     文档变更
+#   style    代码格式(不影响功能逻辑，如空格、分号等)
+#   refactor 代码重构(既不修复 bug，也不添加功能)
+#   perf     性能优化
+#   test     添加或修改测试用例
+#   build    构建系统或外部依赖的改动(如 npm、go.mod)
+#   ci       CI 配置文件或脚本的改动
+#   chore    其他不修改源代码的事务(例如构建过程或辅助工具变动)
+#   revert   回滚某个提交
+#
+# scope(可选): 影响范围，例如模块、功能、文件夹名等(例如: user, database, config)
+#
+# subject(必填): 简洁清晰的描述本次提交的目的
+#
+# body(可选): 提交的详细说明，描述本次更改的背景、原因和解决方案(可换行),每行不超过 75
+#
+# footer(可选): 关联的 Issue 编号、BREAKING CHANGE 或其他备注信息
+#

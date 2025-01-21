@@ -3,6 +3,15 @@
   "displayName": "codetrack",
   "description": "CodeTrack is a Git-powered tool for locally tracking and versioning coding problem solutions, helping you stay organized and monitor your progress effectively.",
   "version": "0.0.0",
+  "publisher": "ashtonsun",
+  "repository": { 
+    "type": "git",
+    "url": "git+https://github.com/EvilJoker/codetrack.git"
+  },
+  "bugs": { 
+    "url": "https://github.com/EvilJoker/codetrack/issues"
+  },
+  "homepage": "https://github.com/EvilJoker/codetrack",
   "engines": {
     "vscode": "^1.80.0"
   },
