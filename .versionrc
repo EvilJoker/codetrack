@@ -1,0 +1,42 @@
+{
+  "header": "# 更新日志\n\n所有版本更新日志请参阅此文档。\n\n",
+  "releaseCommitMessageFormat": "chore(release): {{currentTag}}",
+  "bumpFiles": [
+    {
+      "filename": "package.json",
+      "type": "json"
+    },
+    {
+      "filename": "package-lock.json",
+      "type": "json"
+    }
+  ],
+  "types": [
+    { "type": "feat", "section": "✨ 新功能", "hidden": false },
+    { "type": "fix", "section": "🐛 修复", "hidden": false },
+    { "type": "chore", "section": "📦 构建", "hidden": false },
+    { "type": "docs", "section": "📝 文档", "hidden": false },
+    { "type": "style", "section": "💄 样式", "hidden": false },
+    { "type": "refactor", "section": "♻️ 重构", "hidden": false },
+    { "type": "perf", "section": "⚡ 性能优化", "hidden": false },
+    { "type": "test", "section": "✅ 测试", "hidden": false },
+    { "type": "ci", "section": "🔧 CI 配置", "hidden": false }
+  ],
+  "skip": {
+    "tag": false,
+    "commit": false
+  },
+  "packageFiles": [
+    {
+      "filename": "package.json",
+      "type": "json"
+    }
+  ],
+  "commitUrlFormat": "{{host}}/{{owner}}/{{repository}}/commit/{{hash}}",
+  "compareUrlFormat": "{{host}}/{{owner}}/{{repository}}/compare/{{previousTag}}...{{currentTag}}",
+  "issueUrlFormat": "{{host}}/{{owner}}/{{repository}}/issues/{{id}}",
+  "issuePrefixes": ["#", "ISSUE-", "BUG-"],
+  "scripts": {
+    "postbump": "npx prettier --write CHANGELOG.md"
+  }
+}

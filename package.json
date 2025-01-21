@@ -2,7 +2,7 @@
   "name": "codetrack",
   "displayName": "codetrack",
   "description": "CodeTrack is a Git-powered tool for locally tracking and versioning coding problem solutions, helping you stay organized and monitor your progress effectively.",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -69,7 +69,9 @@
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "lint": "eslint src",
     "test": "vscode-test",
-    "prepare": "husky"
+    "prepare": "husky",
+    "release": "standard-version",
+    "changelog": "standard-version --dry-run"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.6.1",
@@ -81,8 +83,11 @@
     "@typescript-eslint/parser": "^8.17.0",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1",
+    "commitlint": "^19.6.1",
+    "conventional-changelog-cli": "^5.0.0",
     "eslint": "^9.16.0",
     "husky": "^9.1.7",
+    "standard-version": "^9.5.0",
     "ts-loader": "^9.5.1",
     "typescript": "^5.7.2",
     "webpack": "^5.95.0",
