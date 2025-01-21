@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { EventManager, FILTEREVENT } from './infrastructure/event/eventManager';
 import { globalCache } from './infrastructure/cache/globalCache';
-import { DIFFICULTY_EASY, DIFFICULTY_EASY_ZH, DIFFICULTY_HARD, DIFFICULTY_HARD_ZH, DIFFICULTY_MEDIUM, DIFFICULTY_MEDIUM_ZH, ORDER_ASC, ORDER_ASC_ZH, ORDER_DESC_ZH, RECOMMEND_BASIC, RECOMMEND_BASIC_ZH, RECOMMEND_CHALLENGE, RECOMMEND_CHALLENGE_ZH, RECOMMEND_NEED, RECOMMEND_NEED_ZH, STATUS_DOING, STATUS_DOING_ZH, STATUS_DONE, STATUS_PLAN, STATUS_PLAN_ZH } from './infrastructure/constants/constants';
+import { DIFFICULTY_EASY, DIFFICULTY_EASY_ZH, DIFFICULTY_HARD, DIFFICULTY_HARD_ZH, DIFFICULTY_MEDIUM, DIFFICULTY_MEDIUM_ZH, ORDER_ASC, ORDER_ASC_ZH, ORDER_DESC_ZH, RECOMMEND_BASIC, RECOMMEND_BASIC_ZH, RECOMMEND_CHALLENGE, RECOMMEND_CHALLENGE_ZH, RECOMMEND_NEED, RECOMMEND_NEED_ZH, STATUS_DOING, STATUS_DOING_ZH, STATUS_DONE, STATUS_DONE_ZH, STATUS_PLAN, STATUS_PLAN_ZH } from './infrastructure/constants/constants';
 import path from 'path';
 
 export class FilterViewProvider implements vscode.WebviewViewProvider {
@@ -42,6 +42,12 @@ export class FilterViewProvider implements vscode.WebviewViewProvider {
         case 'refreshConfig':
           this.refreshConfig(message.filters);
           break;
+        case 'updatePath':
+          if (message.path.trim() !== ''){
+            globalCache.problemDir = message.path;
+          }
+
+          break;
       }
     });
 
@@ -50,7 +56,7 @@ export class FilterViewProvider implements vscode.WebviewViewProvider {
 
   private refresh() {
     // 加载数据
-    loadProblems(globalCache.path);
+    loadProblems(globalCache.workspacepath + globalCache.problemDir);
     // 发送消息给其他视图，让它们自行刷新
     EventManager.fireEvent(FILTEREVENT, globalCache.filters);
 
@@ -58,71 +64,82 @@ export class FilterViewProvider implements vscode.WebviewViewProvider {
 
   private getHtmlForWebview(): string {
     return `
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <style>
-                    body {
-                        width: 100%; /* Set width to 100% */
-                        height: 10%; /* Set height to 100% */
-                        margin: 0;
-                        padding: 0;
-                    }
-                    .container {
-                        padding: 10px;
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <label>问题路径：${globalCache.path}/problems</label>
-                    <hr>
-                    <label>推荐：</label>
-                    <label><input type="checkbox" id="recommend_basic" checked> ${RECOMMEND_BASIC_ZH}</label>
-                    <label><input type="checkbox" id="recommend_need" checked> ${RECOMMEND_NEED_ZH}</label>
-                    <label><input type="checkbox" id="recommend_challenge" checked> ${RECOMMEND_CHALLENGE_ZH}</label>
-                    <br>
-                    <label>状态：</label>
-                    <label><input type="checkbox" id="status_plan" checked> ${STATUS_PLAN_ZH}</label>
-                    <label><input type="checkbox" id="status_doing" checked> ${STATUS_DOING_ZH}</label>
-                    <label><input type="checkbox" id="status_done" checked> ${STATUS_DOING_ZH}</label>
-                    <br>
-                    <label>难度：</label>
-                    <label><input type="checkbox" id="difficulty_easy" checked> ${DIFFICULTY_EASY_ZH}</label>
-                    <label><input type="checkbox" id="difficulty_mid" checked> ${DIFFICULTY_MEDIUM_ZH}</label>
-                    <label><input type="checkbox" id="difficulty_hard" checked> ${DIFFICULTY_HARD_ZH}</label>
-                    <br>
-                    <label>排序：</label>
-                    <label><input type="radio" name="order" value="ascending" checked > ${ORDER_ASC_ZH}</label>
-                    <label><input type="radio" name="order" value="descending" > ${ORDER_DESC_ZH}</label>
-                    <hr>
-                    <label>标签：</label>
-                    ${globalCache.tags.map(tag => `<label><input type="checkbox" id="tag_${tag}" checked> ${tag}</label>`).join('')}
-                    <hr>
-                    <script>
-                    const vscode = acquireVsCodeApi();
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <style>
+                body {
+                    width: 100%; /* Set width to 100% */
+                    height: 10%; /* Set height to 100% */
+                    margin: 0;
+                    padding: 0;
+                }
+                .container {
+                    padding: 10px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <!-- 添加扫描路径输入框 -->
+                <button id="updatePath">更新</button>
+                <input type="input" id="scanPath" placeholder="输入相对根目录路径, 比如problems" style="width: 300px;" />
+                <hr>
+                <label id="scanPathshow">问题路径：${globalCache.workspacepath}${globalCache.problemDir}</label>
+                <hr>
+                <label>推荐：</label>
+                <label><input type="checkbox" id="recommend_basic" checked> ${RECOMMEND_BASIC_ZH}</label>
+                <label><input type="checkbox" id="recommend_need" checked> ${RECOMMEND_NEED_ZH}</label>
+                <label><input type="checkbox" id="recommend_challenge" checked> ${RECOMMEND_CHALLENGE_ZH}</label>
+                <br>
+                <label>状态：</label>
+                <label><input type="checkbox" id="status_plan" checked> ${STATUS_PLAN_ZH}</label>
+                <label><input type="checkbox" id="status_doing" checked> ${STATUS_DOING_ZH}</label>
+                <label><input type="checkbox" id="status_done" checked> ${STATUS_DONE_ZH}</label>
+                <br>
+                <label>难度：</label>
+                <label><input type="checkbox" id="difficulty_easy" checked> ${DIFFICULTY_EASY_ZH}</label>
+                <label><input type="checkbox" id="difficulty_mid" checked> ${DIFFICULTY_MEDIUM_ZH}</label>
+                <label><input type="checkbox" id="difficulty_hard" checked> ${DIFFICULTY_HARD_ZH}</label>
+                <br>
+                <label>排序：</label>
+                <label><input type="radio" name="order" value="ascending" checked > ${ORDER_ASC_ZH}</label>
+                <label><input type="radio" name="order" value="descending" > ${ORDER_DESC_ZH}</label>
+                <hr>
+                <label>标签：</label>
+                ${globalCache.tags.map(tag => `<label><input type="checkbox" id="tag_${tag}" checked> ${tag}</label>`).join('')}
+                <hr>
+                <script>
+                const vscode = acquireVsCodeApi();
 
-                    // 添加事件监听器
-                    document.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(input => {
-                        input.addEventListener('change', () => {
-                            // 收集所有复选框和单选按钮的值
-                            const filters = {};
-                            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-                                filters[checkbox.id] = checkbox.checked;
-                            });
-                            document.querySelectorAll('input[type="radio"]').forEach(radio => {
-                                if (radio.checked) {
-                                    filters[radio.name] = radio.value;
-                                }
-                            });
-                            vscode.postMessage({ command: 'refreshConfig', filters: filters });
+                // 添加事件监听器
+                document.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(input => {
+                    input.addEventListener('change', () => {
+                        // 收集所有复选框和单选按钮的值
+                        const filters = {};
+                        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                            filters[checkbox.id] = checkbox.checked;
                         });
+                        document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                            if (radio.checked) {
+                                filters[radio.name] = radio.value;
+                            }
+                        });
+                        vscode.postMessage({ command: 'refreshConfig', filters: filters });
                     });
-                    </script>
-                </div>
-            </body>
-            </html>
-        `;
+                });
+
+                // 添加更新路径按钮的事件监听器
+                document.getElementById('updatePath').addEventListener('click', () => {
+                    const newDir = document.getElementById('scanPath').value;
+                    document.getElementById('scanPathshow').textContent = "问题路径：${globalCache.workspacepath}" + newDir; // 更新 scanPathshow label 的文本内容
+                    vscode.postMessage({ command: 'updatePath', path: newDir });
+                });
+                </script>
+            </div>
+        </body>
+        </html>
+    `;
   }
 
   // 修改 refreshConfig 函数，使其接受一个 map 值并更新 filters 变量
@@ -154,9 +171,9 @@ export class FilterViewProvider implements vscode.WebviewViewProvider {
 
 
 
-export function loadProblems(extensionPath: string): any[] {
+export function loadProblems(problemsPath: string): any[] {
   const problems: any[] = [];
-  const problemListPath = path.join(extensionPath, 'problems');
+  const problemListPath = problemsPath;
   if (fs.existsSync(problemListPath)) {
     const files = fs.readdirSync(problemListPath);
     files.forEach(file => {

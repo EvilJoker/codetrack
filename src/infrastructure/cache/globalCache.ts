@@ -17,6 +17,8 @@ export const globalCache = {
     filtertags:[] as string[],
     isInit: true,
     problems:[] as any[],
-    path: "" 
+    workspacepath: "",
+    problemDir: "problems"
+    
 };
 

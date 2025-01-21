@@ -25,9 +25,10 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposableTest);
 
     // 初始化设置
-    globalCache.path = context.extensionPath;
+    globalCache.workspacepath = (vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri.fsPath : context.extensionPath) + "/";
+
     // 加载数据 
-    loadProblems(globalCache.path);
+    loadProblems(globalCache.workspacepath + globalCache.problemDir);
 
     // 注册 WebviewView
     context.subscriptions.push(

@@ -24,10 +24,10 @@ suite('ProblemManager Tests', () => {
 
     test('should load problems from the problems directory', () => {
         context = { extensionPath: path.resolve(__dirname, '../../src/test/data') } as vscode.ExtensionContext;
-        // console.log(path.resolve(__dirname, '../../src/test/data') );
+        console.log(path.resolve(__dirname, '../../src/test/data') );
         globalCache.isInit=true;
         problemDataProvider = new ProblemDataProvider(context);
-        const problems = loadProblems(path.resolve(__dirname, '../../src/test/data'));
+        const problems = loadProblems(path.resolve(__dirname, '../../src/test/data') + "/problems");
         assert.strictEqual(problems.length, 1); 
         assert.strictEqual(problems[0].name, 'Two Sum'); 
     });
