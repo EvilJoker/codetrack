@@ -22,3 +22,6 @@ export const globalCache = {
     
 };
 
+export function updateGlobalCache(newCache: any): void {
+    Object.assign(globalCache, newCache);
+}

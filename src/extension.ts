@@ -3,12 +3,12 @@
 import * as vscode from 'vscode';
 import { FilterViewProvider as FilterViewProvider, loadProblems } from './filterView';
 import { ProblemDataProvider } from './problemManager';
-import { globalCache } from './infrastructure/cache/globalCache';
+import { globalCache, updateGlobalCache } from './infrastructure/cache/globalCache';
 import { logger } from './infrastructure/log/logger';
-
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
+let  intervalId :NodeJS.Timeout ;
 export function activate(context: vscode.ExtensionContext) {
 
     // 使用输出通道记录日志
@@ -25,8 +25,8 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(disposableTest);
 
-    // 初始化设置
-    globalCache.workspacepath = (vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri.fsPath : context.extensionPath) + "/";
+    // 初始化 WorkspaceState
+    loadFromDb(context);
 
     // 加载数据 
     loadProblems(globalCache.workspacepath + globalCache.problemDir);
@@ -36,7 +36,7 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.window.registerWebviewViewProvider('filterView', new FilterViewProvider(context),
             {
                 webviewOptions: {
-                    retainContextWhenHidden: true,
+                    retainContextWhenHidden: true, // 保留 Webview 上下文，即使视图被隐藏
                 }
             })
     );
@@ -45,10 +45,38 @@ export function activate(context: vscode.ExtensionContext) {
     const problemDataProvider = new ProblemDataProvider(context);
     const problemTreeView = vscode.window.createTreeView('problemListView', { treeDataProvider: problemDataProvider, showCollapseAll: true });
     context.subscriptions.push(problemTreeView);
+
+    // 启动一个定时器，每隔 10 秒调用一次 periodicFunction
+    intervalId = setInterval(()=>SavetoDb(context), 10000);
+
 }
 
 // This method is called when your extension is deactivated
-export function deactivate() {
-    // 使用输出通道记录日志
-    logger.info('Your extension "codetrack" is now deactivated.');
+export function deactivate(context: vscode.ExtensionContext) {
+    logger.info('extension "codetrack" is now deactivate!');
+    context.subscriptions.push(new vscode.Disposable(() => clearInterval(intervalId)));
+}
+
+
+
+// 实现 SavetoDb 函数
+function SavetoDb(context: vscode.ExtensionContext) {
+    const workspaceState = context.workspaceState;
+    workspaceState.update("codetrack_globalcache", globalCache);
+    logger.info('update cache to workspaceState!');
+}
+
+// 实现 loadFromDb 函数
+function loadFromDb(context: vscode.ExtensionContext): any {
+    const workspaceState = context.workspaceState;
+    let cache = workspaceState.get("codetrack_globalcache", null);
+    // 不为空时赋值
+    if (cache !== null) {
+        updateGlobalCache(cache);
+        return;
+    }
+    // 为空时，初始化
+    // 初始化设置
+    globalCache.workspacepath = (vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri.fsPath : context.extensionPath) + "/";
+
 }

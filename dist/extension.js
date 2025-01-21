@@ -50,6 +50,7 @@ const globalCache_1 = __webpack_require__(5);
 const logger_1 = __webpack_require__(9);
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
+let intervalId;
 function activate(context) {
     // 使用输出通道记录日志
     logger_1.logger.info('Congratulations, your extension "codetrack" is now active!');
@@ -62,25 +63,46 @@ function activate(context) {
         vscode.window.showInformationMessage('Hello World from codetrack!');
     });
     context.subscriptions.push(disposableTest);
-    // 初始化设置
-    globalCache_1.globalCache.workspacepath = (vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri.fsPath : context.extensionPath) + "/";
+    // 初始化 WorkspaceState
+    loadFromDb(context);
     // 加载数据 
     (0, filterView_1.loadProblems)(globalCache_1.globalCache.workspacepath + globalCache_1.globalCache.problemDir);
     // 注册 WebviewView
     context.subscriptions.push(vscode.window.registerWebviewViewProvider('filterView', new filterView_1.FilterViewProvider(context), {
         webviewOptions: {
-            retainContextWhenHidden: true,
+            retainContextWhenHidden: true, // 保留 Webview 上下文，即使视图被隐藏
         }
     }));
     // 添加 TreeView 提供者
     const problemDataProvider = new problemManager_1.ProblemDataProvider(context);
     const problemTreeView = vscode.window.createTreeView('problemListView', { treeDataProvider: problemDataProvider, showCollapseAll: true });
     context.subscriptions.push(problemTreeView);
+    // 启动一个定时器，每隔 10 秒调用一次 periodicFunction
+    intervalId = setInterval(() => SavetoDb(context), 10000);
 }
 // This method is called when your extension is deactivated
-function deactivate() {
-    // 使用输出通道记录日志
-    logger_1.logger.info('Your extension "codetrack" is now deactivated.');
+function deactivate(context) {
+    logger_1.logger.info('extension "codetrack" is now deactivate!');
+    context.subscriptions.push(new vscode.Disposable(() => clearInterval(intervalId)));
+}
+// 实现 SavetoDb 函数
+function SavetoDb(context) {
+    const workspaceState = context.workspaceState;
+    workspaceState.update("codetrack_globalcache", globalCache_1.globalCache);
+    logger_1.logger.info('update cache to workspaceState!');
+}
+// 实现 loadFromDb 函数
+function loadFromDb(context) {
+    const workspaceState = context.workspaceState;
+    let cache = workspaceState.get("codetrack_globalcache", null);
+    // 不为空时赋值
+    if (cache !== null) {
+        (0, globalCache_1.updateGlobalCache)(cache);
+        return;
+    }
+    // 为空时，初始化
+    // 初始化设置
+    globalCache_1.globalCache.workspacepath = (vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri.fsPath : context.extensionPath) + "/";
 }
 
 
@@ -160,6 +182,17 @@ class FilterViewProvider {
         vscode.commands.registerCommand('codetrack.refresh_filterView', () => {
             this.refresh();
         });
+        // 监听 Webview 可见性变化
+        webviewView.onDidChangeVisibility(() => {
+            if (webviewView.visible) {
+                // console.log('Webview is visible');
+                // 恢复状态或执行其他操作
+            }
+            else {
+                // console.log('Webview is hidden');
+                // 更新 html 页面
+            }
+        });
         // 监听来自 Webview 的消息
         webviewView.webview.onDidReceiveMessage((message) => {
             switch (message.command) {
@@ -187,6 +220,7 @@ class FilterViewProvider {
         eventManager_1.EventManager.fireEvent(eventManager_1.FILTEREVENT, globalCache_1.globalCache.filters);
     }
     getHtmlForWebview() {
+        const filters = globalCache_1.globalCache.filters || {};
         return `
         <!DOCTYPE html>
         <html lang="en">
@@ -211,27 +245,27 @@ class FilterViewProvider {
                 <hr>
                 <label id="scanPathshow">问题路径：${globalCache_1.globalCache.workspacepath}${globalCache_1.globalCache.problemDir}</label>
                 <hr>
-                <label>推荐：</label>
-                <label><input type="checkbox" id="recommend_basic" checked> ${constants_1.RECOMMEND_BASIC_ZH}</label>
-                <label><input type="checkbox" id="recommend_need" checked> ${constants_1.RECOMMEND_NEED_ZH}</label>
-                <label><input type="checkbox" id="recommend_challenge" checked> ${constants_1.RECOMMEND_CHALLENGE_ZH}</label>
+            <label>推荐：</label>
+                <label><input type="checkbox" id="recommend_basic" ${filters.recommend_basic ? 'checked' : ''}> ${constants_1.RECOMMEND_BASIC_ZH}</label>
+                <label><input type="checkbox" id="recommend_need" ${filters.recommend_need ? 'checked' : ''}> ${constants_1.RECOMMEND_NEED_ZH}</label>
+                <label><input type="checkbox" id="recommend_challenge" ${filters.recommend_challenge ? 'checked' : ''}> ${constants_1.RECOMMEND_CHALLENGE_ZH}</label>
                 <br>
                 <label>状态：</label>
-                <label><input type="checkbox" id="status_plan" checked> ${constants_1.STATUS_PLAN_ZH}</label>
-                <label><input type="checkbox" id="status_doing" checked> ${constants_1.STATUS_DOING_ZH}</label>
-                <label><input type="checkbox" id="status_done" checked> ${constants_1.STATUS_DONE_ZH}</label>
+                <label><input type="checkbox" id="status_plan" ${filters.status_plan ? 'checked' : ''}> ${constants_1.STATUS_PLAN_ZH}</label>
+                <label><input type="checkbox" id="status_doing" ${filters.status_doing ? 'checked' : ''}> ${constants_1.STATUS_DOING_ZH}</label>
+                <label><input type="checkbox" id="status_done" ${filters.status_done ? 'checked' : ''}> ${constants_1.STATUS_DONE_ZH}</label>
                 <br>
                 <label>难度：</label>
-                <label><input type="checkbox" id="difficulty_easy" checked> ${constants_1.DIFFICULTY_EASY_ZH}</label>
-                <label><input type="checkbox" id="difficulty_mid" checked> ${constants_1.DIFFICULTY_MEDIUM_ZH}</label>
-                <label><input type="checkbox" id="difficulty_hard" checked> ${constants_1.DIFFICULTY_HARD_ZH}</label>
+                <label><input type="checkbox" id="difficulty_easy" ${filters.difficulty_easy ? 'checked' : ''}> ${constants_1.DIFFICULTY_EASY_ZH}</label>
+                <label><input type="checkbox" id="difficulty_mid" ${filters.difficulty_mid ? 'checked' : ''}> ${constants_1.DIFFICULTY_MEDIUM_ZH}</label>
+                <label><input type="checkbox" id="difficulty_hard" ${filters.difficulty_hard ? 'checked' : ''}> ${constants_1.DIFFICULTY_HARD_ZH}</label>
                 <br>
                 <label>排序：</label>
-                <label><input type="radio" name="order" value="ascending" checked > ${constants_1.ORDER_ASC_ZH}</label>
-                <label><input type="radio" name="order" value="descending" > ${constants_1.ORDER_DESC_ZH}</label>
+                <label><input type="radio" name="order" value="ascending" ${filters.order === 'ascending' ? 'checked' : ''}> ${constants_1.ORDER_ASC_ZH}</label>
+                <label><input type="radio" name="order" value="descending" ${filters.order === 'descending' ? 'checked' : ''}> ${constants_1.ORDER_DESC_ZH}</label>
                 <hr>
                 <label>标签：</label>
-                ${globalCache_1.globalCache.tags.map(tag => `<label><input type="checkbox" id="tag_${tag}" checked> ${tag}</label>`).join('')}
+                 ${globalCache_1.globalCache.tags.map(tag => `<label><input type="checkbox" id="tag_${tag}" ${globalCache_1.globalCache.filtertags.includes(tag) ? 'checked' : ''}> ${tag}</label>`).join('')}
                 <hr>
                 <script>
                 const vscode = acquireVsCodeApi();
@@ -466,6 +500,7 @@ exports.EventManager = EventManager;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.globalCache = void 0;
+exports.updateGlobalCache = updateGlobalCache;
 const constants_1 = __webpack_require__(6);
 exports.globalCache = {
     filters: {
@@ -487,6 +522,9 @@ exports.globalCache = {
     workspacepath: "",
     problemDir: "problems"
 };
+function updateGlobalCache(newCache) {
+    Object.assign(exports.globalCache, newCache);
+}
 
 
 /***/ }),

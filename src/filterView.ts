@@ -33,6 +33,19 @@ export class FilterViewProvider implements vscode.WebviewViewProvider {
       this.refresh();
     });
 
+     // 监听 Webview 可见性变化
+  webviewView.onDidChangeVisibility(() => {
+    if (webviewView.visible) {
+      // console.log('Webview is visible');
+
+      // 恢复状态或执行其他操作
+    } else {
+      // console.log('Webview is hidden');
+      // 更新 html 页面
+    
+    }
+  });
+
     // 监听来自 Webview 的消息
     webviewView.webview.onDidReceiveMessage((message) => {
       switch (message.command) {
@@ -49,7 +62,6 @@ export class FilterViewProvider implements vscode.WebviewViewProvider {
             globalCache.problemDir = message.path;
             globalCache.isInit = true; // 标记路径是否变更
           }
-
           break;
       }
     });
@@ -66,6 +78,7 @@ export class FilterViewProvider implements vscode.WebviewViewProvider {
   }
 
   private getHtmlForWebview(): string {
+    const filters = globalCache.filters || {};
     return `
         <!DOCTYPE html>
         <html lang="en">
@@ -90,27 +103,27 @@ export class FilterViewProvider implements vscode.WebviewViewProvider {
                 <hr>
                 <label id="scanPathshow">问题路径：${globalCache.workspacepath}${globalCache.problemDir}</label>
                 <hr>
-                <label>推荐：</label>
-                <label><input type="checkbox" id="recommend_basic" checked> ${RECOMMEND_BASIC_ZH}</label>
-                <label><input type="checkbox" id="recommend_need" checked> ${RECOMMEND_NEED_ZH}</label>
-                <label><input type="checkbox" id="recommend_challenge" checked> ${RECOMMEND_CHALLENGE_ZH}</label>
+            <label>推荐：</label>
+                <label><input type="checkbox" id="recommend_basic" ${filters.recommend_basic ? 'checked' : ''}> ${RECOMMEND_BASIC_ZH}</label>
+                <label><input type="checkbox" id="recommend_need" ${filters.recommend_need ? 'checked' : ''}> ${RECOMMEND_NEED_ZH}</label>
+                <label><input type="checkbox" id="recommend_challenge" ${filters.recommend_challenge ? 'checked' : ''}> ${RECOMMEND_CHALLENGE_ZH}</label>
                 <br>
                 <label>状态：</label>
-                <label><input type="checkbox" id="status_plan" checked> ${STATUS_PLAN_ZH}</label>
-                <label><input type="checkbox" id="status_doing" checked> ${STATUS_DOING_ZH}</label>
-                <label><input type="checkbox" id="status_done" checked> ${STATUS_DONE_ZH}</label>
+                <label><input type="checkbox" id="status_plan" ${filters.status_plan ? 'checked' : ''}> ${STATUS_PLAN_ZH}</label>
+                <label><input type="checkbox" id="status_doing" ${filters.status_doing ? 'checked' : ''}> ${STATUS_DOING_ZH}</label>
+                <label><input type="checkbox" id="status_done" ${filters.status_done ? 'checked' : ''}> ${STATUS_DONE_ZH}</label>
                 <br>
                 <label>难度：</label>
-                <label><input type="checkbox" id="difficulty_easy" checked> ${DIFFICULTY_EASY_ZH}</label>
-                <label><input type="checkbox" id="difficulty_mid" checked> ${DIFFICULTY_MEDIUM_ZH}</label>
-                <label><input type="checkbox" id="difficulty_hard" checked> ${DIFFICULTY_HARD_ZH}</label>
+                <label><input type="checkbox" id="difficulty_easy" ${filters.difficulty_easy ? 'checked' : ''}> ${DIFFICULTY_EASY_ZH}</label>
+                <label><input type="checkbox" id="difficulty_mid" ${filters.difficulty_mid ? 'checked' : ''}> ${DIFFICULTY_MEDIUM_ZH}</label>
+                <label><input type="checkbox" id="difficulty_hard" ${filters.difficulty_hard ? 'checked' : ''}> ${DIFFICULTY_HARD_ZH}</label>
                 <br>
                 <label>排序：</label>
-                <label><input type="radio" name="order" value="ascending" checked > ${ORDER_ASC_ZH}</label>
-                <label><input type="radio" name="order" value="descending" > ${ORDER_DESC_ZH}</label>
+                <label><input type="radio" name="order" value="ascending" ${filters.order === 'ascending' ? 'checked' : ''}> ${ORDER_ASC_ZH}</label>
+                <label><input type="radio" name="order" value="descending" ${filters.order === 'descending' ? 'checked' : ''}> ${ORDER_DESC_ZH}</label>
                 <hr>
                 <label>标签：</label>
-                ${globalCache.tags.map(tag => `<label><input type="checkbox" id="tag_${tag}" checked> ${tag}</label>`).join('')}
+                 ${globalCache.tags.map(tag => `<label><input type="checkbox" id="tag_${tag}" ${globalCache.filtertags.includes(tag) ? 'checked' : ''}> ${tag}</label>`).join('')}
                 <hr>
                 <script>
                 const vscode = acquireVsCodeApi();
@@ -267,12 +280,12 @@ export function loadProblems(problemsPath: string): any[] {
       (globalCache.filters.difficulty_easy || problem.meta.difficulty !== DIFFICULTY_EASY) &&
       (globalCache.filters.difficulty_mid || problem.meta.difficulty !== DIFFICULTY_MEDIUM) &&
       (globalCache.filters.difficulty_hard || problem.meta.difficulty !== DIFFICULTY_HARD) &&
-      (problem.tags.some((tag:string) => globalCache.filtertags.includes(tag)));
+      (problem.tags.some((tag: string) => globalCache.filtertags.includes(tag)));
   });
   logger.info("cache:" + JSON.stringify(globalCache,null,2));
   logger.info("result:" + JSON.stringify(filteredProblems,null,2));
   // 更新 globalCache.tags
-  globalCache.problems = filteredProblems; 
+  globalCache.problems = filteredProblems;
 
   return filteredProblems;
 }
