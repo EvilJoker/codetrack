@@ -67,7 +67,11 @@ function activate(context) {
     // 加载数据 
     (0, filterView_1.loadProblems)(globalCache_1.globalCache.workspacepath + globalCache_1.globalCache.problemDir);
     // 注册 WebviewView
-    context.subscriptions.push(vscode.window.registerWebviewViewProvider('filterView', new filterView_1.FilterViewProvider(context)));
+    context.subscriptions.push(vscode.window.registerWebviewViewProvider('filterView', new filterView_1.FilterViewProvider(context), {
+        webviewOptions: {
+            retainContextWhenHidden: true,
+        }
+    }));
     // 添加 TreeView 提供者
     const problemDataProvider = new problemManager_1.ProblemDataProvider(context);
     const problemTreeView = vscode.window.createTreeView('problemListView', { treeDataProvider: problemDataProvider, showCollapseAll: true });

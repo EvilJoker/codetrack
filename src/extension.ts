@@ -33,7 +33,12 @@ export function activate(context: vscode.ExtensionContext) {
 
     // 注册 WebviewView
     context.subscriptions.push(
-        vscode.window.registerWebviewViewProvider('filterView', new FilterViewProvider(context))
+        vscode.window.registerWebviewViewProvider('filterView', new FilterViewProvider(context),
+            {
+                webviewOptions: {
+                    retainContextWhenHidden: true,
+                }
+            })
     );
 
     // 添加 TreeView 提供者
@@ -45,5 +50,5 @@ export function activate(context: vscode.ExtensionContext) {
 // This method is called when your extension is deactivated
 export function deactivate() {
     // 使用输出通道记录日志
-   logger.info('Your extension "codetrack" is now deactivated.');
+    logger.info('Your extension "codetrack" is now deactivated.');
 }
