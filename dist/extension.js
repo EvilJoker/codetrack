@@ -136,6 +136,7 @@ const eventManager_1 = __webpack_require__(4);
 const globalCache_1 = __webpack_require__(5);
 const constants_1 = __webpack_require__(6);
 const path_1 = __importDefault(__webpack_require__(7));
+const logger_1 = __webpack_require__(9);
 class FilterViewProvider {
     _extensionContext;
     static viewType = 'filterView';
@@ -166,8 +167,10 @@ class FilterViewProvider {
                     this.refreshConfig(message.filters);
                     break;
                 case 'updatePath':
-                    if (message.path.trim() !== '') {
+                    let dir = message.path.trim();
+                    if (dir !== '' && dir !== globalCache_1.globalCache.problemDir) {
                         globalCache_1.globalCache.problemDir = message.path;
+                        globalCache_1.globalCache.isInit = true; // 标记路径是否变更
                     }
                     break;
             }
@@ -286,6 +289,7 @@ exports.FilterViewProvider = FilterViewProvider;
 function loadProblems(problemsPath) {
     const problems = [];
     const problemListPath = problemsPath;
+    logger_1.logger.info("path:" + problemListPath);
     if (fs.existsSync(problemListPath)) {
         const files = fs.readdirSync(problemListPath);
         files.forEach(file => {
@@ -355,11 +359,11 @@ function loadProblems(problemsPath) {
         });
     }
     // 提炼所有 problems 中的 tags 形成一个不重复的 tags 列表
-    const uniqueTags = getUniqueTags(problems);
-    globalCache_1.globalCache.tags = uniqueTags;
+    const allTags = getUniqueTags(problems);
+    globalCache_1.globalCache.tags = allTags;
     if (globalCache_1.globalCache.isInit) {
         // 第一次初始化
-        globalCache_1.globalCache.filtertags = uniqueTags;
+        globalCache_1.globalCache.filtertags = allTags;
         globalCache_1.globalCache.isInit = false;
     }
     // 根据 globalCache.filters 过滤问题列表
@@ -375,6 +379,8 @@ function loadProblems(problemsPath) {
             (globalCache_1.globalCache.filters.difficulty_hard || problem.meta.difficulty !== constants_1.DIFFICULTY_HARD) &&
             (problem.tags.some((tag) => globalCache_1.globalCache.filtertags.includes(tag)));
     });
+    logger_1.logger.info("cache:" + JSON.stringify(globalCache_1.globalCache, null, 2));
+    logger_1.logger.info("result:" + JSON.stringify(filteredProblems, null, 2));
     // 更新 globalCache.tags
     globalCache_1.globalCache.problems = filteredProblems;
     return filteredProblems;
@@ -472,7 +478,7 @@ exports.globalCache = {
     },
     tags: [],
     filtertags: [],
-    isInit: true,
+    isInit: true, // 是否切换过目录
     problems: [],
     workspacepath: "",
     problemDir: "problems"

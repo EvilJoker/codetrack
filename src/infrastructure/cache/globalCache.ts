@@ -15,7 +15,7 @@ export const globalCache = {
     } ,
     tags:[] as string[],
     filtertags:[] as string[],
-    isInit: true,
+    isInit: true, // 是否切换过目录
     problems:[] as any[],
     workspacepath: "",
     problemDir: "problems"

@@ -4,6 +4,7 @@ import { EventManager, FILTEREVENT } from './infrastructure/event/eventManager';
 import { globalCache } from './infrastructure/cache/globalCache';
 import { DIFFICULTY_EASY, DIFFICULTY_EASY_ZH, DIFFICULTY_HARD, DIFFICULTY_HARD_ZH, DIFFICULTY_MEDIUM, DIFFICULTY_MEDIUM_ZH, ORDER_ASC, ORDER_ASC_ZH, ORDER_DESC_ZH, RECOMMEND_BASIC, RECOMMEND_BASIC_ZH, RECOMMEND_CHALLENGE, RECOMMEND_CHALLENGE_ZH, RECOMMEND_NEED, RECOMMEND_NEED_ZH, STATUS_DOING, STATUS_DOING_ZH, STATUS_DONE, STATUS_DONE_ZH, STATUS_PLAN, STATUS_PLAN_ZH } from './infrastructure/constants/constants';
 import path from 'path';
+import { logger } from './infrastructure/log/logger';
 
 export class FilterViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'filterView';
@@ -43,8 +44,10 @@ export class FilterViewProvider implements vscode.WebviewViewProvider {
           this.refreshConfig(message.filters);
           break;
         case 'updatePath':
-          if (message.path.trim() !== ''){
+          let dir = message.path.trim();
+          if (dir!== '' && dir!==globalCache.problemDir) {
             globalCache.problemDir = message.path;
+            globalCache.isInit = true; // 标记路径是否变更
           }
 
           break;
@@ -174,6 +177,7 @@ export class FilterViewProvider implements vscode.WebviewViewProvider {
 export function loadProblems(problemsPath: string): any[] {
   const problems: any[] = [];
   const problemListPath = problemsPath;
+  logger.info("path:" + problemListPath);
   if (fs.existsSync(problemListPath)) {
     const files = fs.readdirSync(problemListPath);
     files.forEach(file => {
@@ -240,16 +244,17 @@ export function loadProblems(problemsPath: string): any[] {
       info: { updateTime: "2023-10-01T12:00:00Z", status: STATUS_PLAN },
       tags: ["数组", "哈希表"]
     });
-  }
 
-    // 提炼所有 problems 中的 tags 形成一个不重复的 tags 列表
-    const uniqueTags = getUniqueTags(problems);
-    globalCache.tags = uniqueTags;
-    if (globalCache.isInit) {
-      // 第一次初始化
-      globalCache.filtertags = uniqueTags;
-      globalCache.isInit = false;
-    }
+
+  }
+  // 提炼所有 problems 中的 tags 形成一个不重复的 tags 列表
+  const allTags = getUniqueTags(problems);
+  globalCache.tags = allTags;
+  if (globalCache.isInit) {
+    // 第一次初始化
+    globalCache.filtertags = allTags;
+    globalCache.isInit = false;
+  }
 
   // 根据 globalCache.filters 过滤问题列表
   const filteredProblems = problems.filter(problem => {
@@ -264,7 +269,8 @@ export function loadProblems(problemsPath: string): any[] {
       (globalCache.filters.difficulty_hard || problem.meta.difficulty !== DIFFICULTY_HARD) &&
       (problem.tags.some((tag:string) => globalCache.filtertags.includes(tag)));
   });
-
+  logger.info("cache:" + JSON.stringify(globalCache,null,2));
+  logger.info("result:" + JSON.stringify(filteredProblems,null,2));
   // 更新 globalCache.tags
   globalCache.problems = filteredProblems; 
 
