@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import * as path from 'path';
 import { EventManager, FILTEREVENT } from './infrastructure/event/eventManager';
 import { globalCache } from './infrastructure/cache/globalCache';
 import { DIFFICULTY_EASY, DIFFICULTY_EASY_ZH, DIFFICULTY_HARD, DIFFICULTY_HARD_ZH, DIFFICULTY_MEDIUM, DIFFICULTY_MEDIUM_ZH, ORDER_ASC, ORDER_ASC_ZH, ORDER_DESC_ZH, RECOMMEND_BASIC, RECOMMEND_BASIC_ZH, RECOMMEND_CHALLENGE, RECOMMEND_CHALLENGE_ZH, RECOMMEND_NEED, RECOMMEND_NEED_ZH, STATUS_DOING, STATUS_DOING_ZH, STATUS_DONE, STATUS_DONE_ZH, STATUS_PLAN, STATUS_PLAN_ZH } from './infrastructure/constants/constants';
-import path from 'path';
 import { logger } from './infrastructure/log/logger';
 
 export class FilterViewProvider implements vscode.WebviewViewProvider {
@@ -63,11 +63,52 @@ export class FilterViewProvider implements vscode.WebviewViewProvider {
             globalCache.isInit = true; // 标记路径是否变更
           }
           break;
+        case 'additem':
+          let itempath = message.path.trim();
+          if (itempath!== '') {
+            this.createProblem(itempath);
+          }
+          break;
       }
     });
 
   }
 
+  private createProblem(itempath: string) {
+        // 检查目录是否合法
+        if (!fs.existsSync(itempath) || !fs.lstatSync(itempath).isDirectory()) {
+            vscode.window.showErrorMessage('指定的路径不是一个合法的目录');
+            return;
+        }
+
+        // 检查目录下是否存在 meta.json 文件
+        const metaJsonPath = path.join(itempath, 'meta.json');
+        if (fs.existsSync(metaJsonPath)) {
+            vscode.window.showErrorMessage('目录下已经存在 meta.json 文件');
+            return;
+        }
+
+        // 创建 meta.json 文件
+        const metaJsonContent = {
+            "id": "1",
+            "name": "Two Sum",
+            "name_zh": "Two Sum",
+            "description": "Given an array of integers, return indices of the two numbers such that they add up to a specific target.",
+            "description_zh": "Given an array of integers, return indices of the two numbers such that they add up to a specific target.",
+            "meta": {
+                "difficulty": "easy",
+                "recommend": "basic"
+            },
+            "info": {
+                "updateTime": "2023-10-01T12:00:00Z",
+                "status": "plan"
+            },
+            "tags": ["array", "hash-table"]
+        };
+
+        fs.writeFileSync(metaJsonPath, JSON.stringify(metaJsonContent, null, 2));
+        vscode.window.showInformationMessage('meta.json 文件已成功创建');
+    }
 
   private refresh() {
     // 加载数据
@@ -125,6 +166,8 @@ export class FilterViewProvider implements vscode.WebviewViewProvider {
                 <label>标签：</label>
                  ${globalCache.tags.map(tag => `<label><input type="checkbox" id="tag_${tag}" ${globalCache.filtertags.includes(tag) ? 'checked' : ''}> ${tag}</label>`).join('')}
                 <hr>
+                <button id="addItem">新增</button>
+                <input type="input" id="itemPath" placeholder="输入路径, 生成题目元数据文件" style="width: 300px;" />
                 <script>
                 const vscode = acquireVsCodeApi();
 
@@ -153,6 +196,15 @@ export class FilterViewProvider implements vscode.WebviewViewProvider {
                     }
                     vscode.postMessage({ command: 'updatePath', path: newDir });
                     document.getElementById('scanPathshow').textContent = "问题路径：${globalCache.workspacepath}" + newDir; // 更新 scanPathshow label 的文本内容
+                });
+
+                   // 添加新增题目事件监听器
+                document.getElementById('addItem').addEventListener('click', () => {
+                    const newDir = document.getElementById('itemPath').value.trim();
+                    if (newDir === ''){
+                      return
+                    }
+                    vscode.postMessage({ command: 'additem', path: newDir });
                 });
                 </script>
             </div>

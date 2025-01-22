@@ -162,18 +162,15 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FilterViewProvider = void 0;
 exports.loadProblems = loadProblems;
 const vscode = __importStar(__webpack_require__(1));
 const fs = __importStar(__webpack_require__(3));
+const path = __importStar(__webpack_require__(7));
 const eventManager_1 = __webpack_require__(4);
 const globalCache_1 = __webpack_require__(5);
 const constants_1 = __webpack_require__(6);
-const path_1 = __importDefault(__webpack_require__(7));
 const logger_1 = __webpack_require__(9);
 class FilterViewProvider {
     _extensionContext;
@@ -222,8 +219,46 @@ class FilterViewProvider {
                         globalCache_1.globalCache.isInit = true; // 标记路径是否变更
                     }
                     break;
+                case 'additem':
+                    let itempath = message.path.trim();
+                    if (itempath !== '') {
+                        this.createProblem(itempath);
+                    }
+                    break;
             }
         });
+    }
+    createProblem(itempath) {
+        // 检查目录是否合法
+        if (!fs.existsSync(itempath) || !fs.lstatSync(itempath).isDirectory()) {
+            vscode.window.showErrorMessage('指定的路径不是一个合法的目录');
+            return;
+        }
+        // 检查目录下是否存在 meta.json 文件
+        const metaJsonPath = path.join(itempath, 'meta.json');
+        if (fs.existsSync(metaJsonPath)) {
+            vscode.window.showErrorMessage('目录下已经存在 meta.json 文件');
+            return;
+        }
+        // 创建 meta.json 文件
+        const metaJsonContent = {
+            "id": "1",
+            "name": "Two Sum",
+            "name_zh": "Two Sum",
+            "description": "Given an array of integers, return indices of the two numbers such that they add up to a specific target.",
+            "description_zh": "Given an array of integers, return indices of the two numbers such that they add up to a specific target.",
+            "meta": {
+                "difficulty": "easy",
+                "recommend": "basic"
+            },
+            "info": {
+                "updateTime": "2023-10-01T12:00:00Z",
+                "status": "plan"
+            },
+            "tags": ["array", "hash-table"]
+        };
+        fs.writeFileSync(metaJsonPath, JSON.stringify(metaJsonContent, null, 2));
+        vscode.window.showInformationMessage('meta.json 文件已成功创建');
     }
     refresh() {
         // 加载数据
@@ -279,6 +314,8 @@ class FilterViewProvider {
                 <label>标签：</label>
                  ${globalCache_1.globalCache.tags.map(tag => `<label><input type="checkbox" id="tag_${tag}" ${globalCache_1.globalCache.filtertags.includes(tag) ? 'checked' : ''}> ${tag}</label>`).join('')}
                 <hr>
+                <button id="addItem">新增</button>
+                <input type="input" id="itemPath" placeholder="输入路径, 生成题目元数据文件" style="width: 300px;" />
                 <script>
                 const vscode = acquireVsCodeApi();
 
@@ -307,6 +344,15 @@ class FilterViewProvider {
                     }
                     vscode.postMessage({ command: 'updatePath', path: newDir });
                     document.getElementById('scanPathshow').textContent = "问题路径：${globalCache_1.globalCache.workspacepath}" + newDir; // 更新 scanPathshow label 的文本内容
+                });
+
+                   // 添加新增题目事件监听器
+                document.getElementById('addItem').addEventListener('click', () => {
+                    const newDir = document.getElementById('itemPath').value.trim();
+                    if (newDir === ''){
+                      return
+                    }
+                    vscode.postMessage({ command: 'additem', path: newDir });
                 });
                 </script>
             </div>
@@ -346,7 +392,7 @@ function loadProblems(problemsPath) {
     if (fs.existsSync(problemListPath)) {
         const files = fs.readdirSync(problemListPath);
         files.forEach(file => {
-            const filePath = path_1.default.join(problemListPath, file, 'meta.json');
+            const filePath = path.join(problemListPath, file, 'meta.json');
             if (fs.existsSync(filePath)) {
                 const fileContent = fs.readFileSync(filePath, 'utf8');
                 const problem = JSON.parse(fileContent);
@@ -359,7 +405,7 @@ function loadProblems(problemsPath) {
                     meta: problem.meta,
                     info: problem.info,
                     tags: problem.tags,
-                    filePath: path_1.default.join(problemListPath, file)
+                    filePath: path.join(problemListPath, file)
                 });
             }
         });
