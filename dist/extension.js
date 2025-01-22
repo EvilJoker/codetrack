@@ -206,7 +206,7 @@ class FilterViewProvider {
                 case 'updatePath':
                     let dir = message.path.trim();
                     if (dir !== '' && dir !== globalCache_1.globalCache.problemDir) {
-                        globalCache_1.globalCache.problemDir = message.path;
+                        globalCache_1.globalCache.problemDir = dir;
                         globalCache_1.globalCache.isInit = true; // 标记路径是否变更
                     }
                     break;
@@ -289,9 +289,12 @@ class FilterViewProvider {
 
                 // 添加更新路径按钮的事件监听器
                 document.getElementById('updatePath').addEventListener('click', () => {
-                    const newDir = document.getElementById('scanPath').value;
-                    document.getElementById('scanPathshow').textContent = "问题路径：${globalCache_1.globalCache.workspacepath}" + newDir; // 更新 scanPathshow label 的文本内容
+                    const newDir = document.getElementById('scanPath').value.trim();
+                    if (newDir === ''){
+                      return
+                    }
                     vscode.postMessage({ command: 'updatePath', path: newDir });
+                    document.getElementById('scanPathshow').textContent = "问题路径：${globalCache_1.globalCache.workspacepath}" + newDir; // 更新 scanPathshow label 的文本内容
                 });
                 </script>
             </div>

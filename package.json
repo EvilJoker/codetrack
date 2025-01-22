@@ -2,7 +2,7 @@
   "name": "codetrack",
   "displayName": "codetrack",
   "description": "CodeTrack is a Git-powered tool for locally tracking and versioning coding problem solutions, helping you stay organized and monitor your progress effectively.",
-  "version": "0.0.0",
+  "version": "0.0.2",
   "publisher": "ashtonsun",
   "repository": { 
     "type": "git",

@@ -59,7 +59,7 @@ export class FilterViewProvider implements vscode.WebviewViewProvider {
         case 'updatePath':
           let dir = message.path.trim();
           if (dir!== '' && dir!==globalCache.problemDir) {
-            globalCache.problemDir = message.path;
+            globalCache.problemDir = dir;
             globalCache.isInit = true; // 标记路径是否变更
           }
           break;
@@ -147,9 +147,12 @@ export class FilterViewProvider implements vscode.WebviewViewProvider {
 
                 // 添加更新路径按钮的事件监听器
                 document.getElementById('updatePath').addEventListener('click', () => {
-                    const newDir = document.getElementById('scanPath').value;
-                    document.getElementById('scanPathshow').textContent = "问题路径：${globalCache.workspacepath}" + newDir; // 更新 scanPathshow label 的文本内容
+                    const newDir = document.getElementById('scanPath').value.trim();
+                    if (newDir === ''){
+                      return
+                    }
                     vscode.postMessage({ command: 'updatePath', path: newDir });
+                    document.getElementById('scanPathshow').textContent = "问题路径：${globalCache.workspacepath}" + newDir; // 更新 scanPathshow label 的文本内容
                 });
                 </script>
             </div>
