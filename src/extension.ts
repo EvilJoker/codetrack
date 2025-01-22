@@ -4,14 +4,15 @@ import * as vscode from 'vscode';
 import { FilterViewProvider as FilterViewProvider, loadProblems } from './filterView';
 import { ProblemDataProvider } from './problemManager';
 import { globalCache } from './infrastructure/cache/globalCache';
+import { logger } from './infrastructure/log/logger';
+
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 
-    // Use the console to output diagnostic information (console.log) and errors (console.error)
-    // This line of code will only be executed once when your extension is activated
-    console.log('Congratulations, your extension "codetrack" is now active!');
+    // 使用输出通道记录日志
+    logger.info('Congratulations, your extension "codetrack" is now active!');
 
     // The command has been defined in the package.json file
     // Now provide the implementation of the command with registerCommand
@@ -39,8 +40,10 @@ export function activate(context: vscode.ExtensionContext) {
     const problemDataProvider = new ProblemDataProvider(context);
     const problemTreeView = vscode.window.createTreeView('problemListView', { treeDataProvider: problemDataProvider, showCollapseAll: true });
     context.subscriptions.push(problemTreeView);
-
 }
 
 // This method is called when your extension is deactivated
-export function deactivate() { }
+export function deactivate() {
+    // 使用输出通道记录日志
+   logger.info('Your extension "codetrack" is now deactivated.');
+}
