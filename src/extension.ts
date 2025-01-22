@@ -46,6 +46,22 @@ export function activate(context: vscode.ExtensionContext) {
     const problemTreeView = vscode.window.createTreeView('problemListView', { treeDataProvider: problemDataProvider, showCollapseAll: true });
     context.subscriptions.push(problemTreeView);
 
+    // 注册 openProblem 命令
+    const disposableOpenProblem = vscode.commands.registerCommand('codetrack.openProblem', (problemItem: any) => {
+        if (problemItem && problemItem.filePath) {
+            const uri = vscode.Uri.file(problemItem.filePath);
+            vscode.commands.executeCommand('revealInExplorer', uri).then(
+                () => {
+                    logger.info(`Successfully revealed ${problemItem.filePath} in the explorer.`);
+                },
+                (error) => {
+                    logger.error(`Failed to reveal ${problemItem.filePath}:` + error);
+                }
+            );
+        }
+    });
+    context.subscriptions.push(disposableOpenProblem);
+
     // 启动一个定时器，每隔 10 秒调用一次 periodicFunction
     intervalId = setInterval(()=>SavetoDb(context), 10000);
 

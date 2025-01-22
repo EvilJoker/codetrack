@@ -209,7 +209,8 @@ export function loadProblems(problemsPath: string): any[] {
           description_zh: problem.description_zh,
           meta: problem.meta,
           info: problem.info,
-          tags: problem.tags
+          tags: problem.tags,
+          filePath: path.join(problemListPath, file)
         });
       }
     });

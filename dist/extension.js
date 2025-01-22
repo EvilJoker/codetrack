@@ -77,6 +77,18 @@ function activate(context) {
     const problemDataProvider = new problemManager_1.ProblemDataProvider(context);
     const problemTreeView = vscode.window.createTreeView('problemListView', { treeDataProvider: problemDataProvider, showCollapseAll: true });
     context.subscriptions.push(problemTreeView);
+    // 注册 openProblem 命令
+    const disposableOpenProblem = vscode.commands.registerCommand('codetrack.openProblem', (problemItem) => {
+        if (problemItem && problemItem.filePath) {
+            const uri = vscode.Uri.file(problemItem.filePath);
+            vscode.commands.executeCommand('revealInExplorer', uri).then(() => {
+                logger_1.logger.info(`Successfully revealed ${problemItem.filePath} in the explorer.`);
+            }, (error) => {
+                logger_1.logger.error(`Failed to reveal ${problemItem.filePath}:` + error);
+            });
+        }
+    });
+    context.subscriptions.push(disposableOpenProblem);
     // 启动一个定时器，每隔 10 秒调用一次 periodicFunction
     intervalId = setInterval(() => SavetoDb(context), 10000);
 }
@@ -346,7 +358,8 @@ function loadProblems(problemsPath) {
                     description_zh: problem.description_zh,
                     meta: problem.meta,
                     info: problem.info,
-                    tags: problem.tags
+                    tags: problem.tags,
+                    filePath: path_1.default.join(problemListPath, file)
                 });
             }
         });
@@ -632,7 +645,7 @@ class ProblemDataProvider {
         }
         else {
             // 根据 filters 过滤问题列表
-            return Promise.resolve(globalCache_1.globalCache.problems.map(problem => new ProblemItem(problem.name, problem.description, problem.description_zh, problem.meta, problem.info, problem.tags)));
+            return Promise.resolve(globalCache_1.globalCache.problems.map(problem => new ProblemItem(problem.name, problem.description, problem.description_zh, problem.meta, problem.info, problem.tags, problem.filePath)));
         }
     }
     refresh() {
@@ -648,8 +661,9 @@ class ProblemItem extends vscode.TreeItem {
     meta;
     info;
     tags;
+    filePath;
     collapsibleState;
-    constructor(name, description_info, description_info_zh, meta, info, tags, collapsibleState = vscode.TreeItemCollapsibleState.None) {
+    constructor(name, description_info, description_info_zh, meta, info, tags, filePath, collapsibleState = vscode.TreeItemCollapsibleState.None) {
         // label + description 会被用来展示
         super(name, collapsibleState);
         this.name = name;
@@ -658,6 +672,7 @@ class ProblemItem extends vscode.TreeItem {
         this.meta = meta;
         this.info = info;
         this.tags = tags;
+        this.filePath = filePath;
         this.collapsibleState = collapsibleState;
         this.description = `${this.meta.difficulty} - ${this.meta.recommend} - ${this.info.status} `;
         this.tooltip = `${this.description_info_zh} - ${this.info.updateTime} - ${this.tags}`;

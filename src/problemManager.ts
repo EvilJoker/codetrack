@@ -37,7 +37,8 @@ export class ProblemDataProvider implements vscode.TreeDataProvider<ProblemItem>
                 problem.description_zh,
                 problem.meta,
                 problem.info,
-                problem.tags
+                problem.tags,
+                problem.filePath
             )));
         }
     }
@@ -58,6 +59,7 @@ export class ProblemItem extends vscode.TreeItem {
         public readonly meta: { difficulty: string, recommend: string },
         public readonly info: { updateTime: string, status: string },
         public readonly tags: string[],
+        public readonly filePath: string,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.None
     ) {
 
