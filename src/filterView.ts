@@ -3,8 +3,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { EventManager, FILTEREVENT } from './infrastructure/event/eventManager';
 import { globalCache } from './infrastructure/cache/globalCache';
-import { DIFFICULTY_EASY, DIFFICULTY_EASY_ZH, DIFFICULTY_HARD, DIFFICULTY_HARD_ZH, DIFFICULTY_MEDIUM, DIFFICULTY_MEDIUM_ZH, ORDER_ASC, ORDER_ASC_ZH, ORDER_DESC_ZH, RECOMMEND_BASIC, RECOMMEND_BASIC_ZH, RECOMMEND_CHALLENGE, RECOMMEND_CHALLENGE_ZH, RECOMMEND_NEED, RECOMMEND_NEED_ZH, STATUS_DOING, STATUS_DOING_ZH, STATUS_DONE, STATUS_DONE_ZH, STATUS_PLAN, STATUS_PLAN_ZH } from './infrastructure/constants/constants';
 import { logger } from './infrastructure/log/logger';
+import { LoadProblems } from './infrastructure/model/problem';
+import { RECOMMEND_BASIC_ZH, RECOMMEND_NEED_ZH, RECOMMEND_CHALLENGE_ZH, STATUS_PLAN_ZH, STATUS_DOING_ZH, STATUS_DONE_ZH, DIFFICULTY_EASY_ZH, DIFFICULTY_MEDIUM_ZH, DIFFICULTY_HARD_ZH, ORDER_ASC_ZH, ORDER_DESC_ZH, ORDER_ASC } from './infrastructure/constants/constants';
 
 export class FilterViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'filterView';
@@ -125,7 +126,7 @@ export class FilterViewProvider implements vscode.WebviewViewProvider {
 
   private refresh() {
     // 加载数据
-    loadProblems(globalCache.workspacepath + globalCache.problemDir);
+    LoadProblems(globalCache.workspacepath + globalCache.problemDir);
     // 发送消息给其他视图，让它们自行刷新
     EventManager.fireEvent(FILTEREVENT, globalCache.filters);
 
@@ -251,183 +252,4 @@ export class FilterViewProvider implements vscode.WebviewViewProvider {
 
   }
 
-}
-
-
-
-export function loadProblems(problemsPath: string): any[] {
-  const problems: any[] = [];
-  const problemListPath = problemsPath;
-  logger.info("path:" + problemListPath);
-  if (fs.existsSync(problemListPath)) {
-    const files = fs.readdirSync(problemListPath);
-    files.forEach(file => {
-      const filePath = path.join(problemListPath, file, 'meta.json');
-      if (fs.existsSync(filePath)) {
-        const fileContent = fs.readFileSync(filePath, 'utf8');
-        const problem = JSON.parse(fileContent);
-        // 修改问题对象以匹配新的数据结构
-        problems.push({
-          name: problem.name,
-          name_zh: problem.name_zh,
-          description: problem.description,
-          description_zh: problem.description_zh,
-          meta: problem.meta,
-          info: problem.info,
-          tags: problem.tags,
-          filePath: path.join(problemListPath, file)
-        });
-      }
-    });
-  } else {
-    // 添加默认的问题列表，修改以匹配新的数据结构
-    problems.push({
-      name: "问题1",
-      name_zh: "问题1",
-      description: "这是问题1的描述",
-      description_zh: "这是问题1的描述",
-      meta: { difficulty: DIFFICULTY_EASY, recommend: RECOMMEND_BASIC },
-      info: { updateTime: "2023-10-01T12:00:00Z", status: STATUS_PLAN },
-      tags: ["数组"]
-    });
-    problems.push({
-      name: "问题2",
-      name_zh: "问题2",
-      description: "这是问题2的描述",
-      description_zh: "这是问题2的描述",
-      meta: { difficulty: DIFFICULTY_MEDIUM, recommend: RECOMMEND_NEED },
-      info: { updateTime: "2023-10-01T12:00:00Z", status: STATUS_PLAN },
-      tags: ["数组", "哈希表"]
-    });
-    problems.push({
-      name: "问题3",
-      name_zh: "问题3",
-      description: "这是问题3的描述",
-      description_zh: "这是问题3的描述",
-      meta: { difficulty: DIFFICULTY_HARD, recommend: RECOMMEND_CHALLENGE },
-      info: { updateTime: "2023-10-01T12:00:00Z", status: STATUS_DOING },
-      tags: ["数组"]
-    });
-    problems.push({
-      name: "问题4",
-      name_zh: "问题4",
-      description: "这是问题4的描述",
-      description_zh: "这是问题4的描述",
-      meta: { difficulty: DIFFICULTY_EASY, recommend: RECOMMEND_BASIC },
-      info: { updateTime: "2023-10-01T12:00:00Z", status: STATUS_DONE },
-      tags: ["数组"]
-    });
-    problems.push({
-      name: "问题5",
-      name_zh: "问题5",
-      description: "这是问题5的描述",
-      description_zh: "这是问题5的描述",
-      meta: { difficulty: DIFFICULTY_MEDIUM, recommend: RECOMMEND_NEED },
-      info: { updateTime: "2023-10-01T12:00:00Z", status: STATUS_PLAN },
-      tags: ["数组", "哈希表"]
-    });
-
-
-  }
-  // 提炼所有 problems 中的 tags 形成一个不重复的 tags 列表
-  const allTags = getUniqueTags(problems);
-  globalCache.tags = allTags;
-  if (globalCache.isInit) {
-    // 第一次初始化
-    globalCache.filtertags = allTags;
-    globalCache.isInit = false;
-  }
-
-  // 根据 globalCache.filters 过滤问题列表
-  const filteredProblems = problems.filter(problem => {
-    return (globalCache.filters.recommend_basic || problem.meta.recommend !== RECOMMEND_BASIC) &&
-      (globalCache.filters.recommend_need || problem.meta.recommend !== RECOMMEND_NEED) &&
-      (globalCache.filters.recommend_challenge || problem.meta.recommend !== RECOMMEND_CHALLENGE) &&
-      (globalCache.filters.status_plan || problem.info.status !== STATUS_PLAN) &&
-      (globalCache.filters.status_doing || problem.info.status !== STATUS_DOING) &&
-      (globalCache.filters.status_done || problem.info.status !== STATUS_DONE) &&
-      (globalCache.filters.difficulty_easy || problem.meta.difficulty !== DIFFICULTY_EASY) &&
-      (globalCache.filters.difficulty_mid || problem.meta.difficulty !== DIFFICULTY_MEDIUM) &&
-      (globalCache.filters.difficulty_hard || problem.meta.difficulty !== DIFFICULTY_HARD) &&
-      (problem.tags.some((tag: string) => globalCache.filtertags.includes(tag)));
-  });
-  logger.info("cache:" + JSON.stringify(globalCache, null, 2));
-  logger.info("result:" + JSON.stringify(filteredProblems, null, 2));
-  // 更新 globalCache.tags
-  globalCache.problems = filteredProblems;
-
-  const sorted = sortProblems(filteredProblems);
-
-
-  return sorted;
-}
-
-// 新增函数：提炼所有 problems 中的 tags 形成一个不重复的 tags 列表
-function getUniqueTags(problems: any[]): string[] {
-  const tagsSet = new Set<string>();
-  problems.forEach(problem => {
-    problem.tags.forEach((tag: string) => {
-      tagsSet.add(tag);
-    });
-  });
-  return Array.from(tagsSet);
-}
-
-function sortProblems(problems: any[]): any[] {
-  // 获取排序顺序
-  const order = globalCache.filters.order === 'ascending' ? 1 : -1;
-
-  // 定义状态、推荐和难度的排序规则
-  const statusOrder: { [key: string]: number } = {
-    [STATUS_PLAN]: 1,
-    [STATUS_DOING]: 2,
-    [STATUS_DONE]: 3
-  };
-
-  const recommendOrder: { [key: string]: number } = {
-    [RECOMMEND_BASIC]: 1,
-    [RECOMMEND_NEED]: 2,
-    [RECOMMEND_CHALLENGE]: 3
-  };
-
-  const difficultyOrder: { [key: string]: number } = {
-    [DIFFICULTY_EASY]: 1,
-    [DIFFICULTY_MEDIUM]: 2,
-    [DIFFICULTY_HARD]: 3
-  };
-
-  // 定义排序规则
-  const sortRules = [
-    (a: any, b: any) => {
-      const tagA = a.tags.length > 0 ? a.tags[0] : '';
-      const tagB = b.tags.length > 0 ? b.tags[0] : '';
-      return tagA.localeCompare(tagB) * order;
-    },
-    (a: any, b: any) => {
-      const statusA = statusOrder[a.info.status as keyof typeof statusOrder];
-      const statusB = statusOrder[b.info.status as keyof typeof statusOrder];
-      return (statusA - statusB) * order;
-    },
-    (a: any, b: any) => {
-      const recommendA = recommendOrder[a.meta.recommend as keyof typeof recommendOrder];
-      const recommendB = recommendOrder[b.meta.recommend as keyof typeof recommendOrder];
-      return (recommendA - recommendB) * order;
-    },
-    (a: any, b: any) => {
-      const difficultyA = difficultyOrder[a.meta.difficulty as keyof typeof difficultyOrder];
-      const difficultyB = difficultyOrder[b.meta.difficulty as keyof typeof difficultyOrder];
-      return (difficultyA - difficultyB) * order;
-    }
-  ];
-
-  // 进行排序
-  return problems.sort((a, b) => {
-    for (const rule of sortRules) {
-      const result = rule(a, b);
-      if (result !== 0) {
-        return result;
-      }
-    }
-    return 0;
-  });
 }
