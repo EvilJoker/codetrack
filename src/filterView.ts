@@ -305,7 +305,7 @@ export function loadProblems(problemsPath: string): any[] {
       description: "这是问题3的描述",
       description_zh: "这是问题3的描述",
       meta: { difficulty: DIFFICULTY_HARD, recommend: RECOMMEND_CHALLENGE },
-      info: { updateTime: "2023-10-01T12:00:00Z", status: STATUS_PLAN },
+      info: { updateTime: "2023-10-01T12:00:00Z", status: STATUS_DOING },
       tags: ["数组"]
     });
     problems.push({
@@ -314,7 +314,7 @@ export function loadProblems(problemsPath: string): any[] {
       description: "这是问题4的描述",
       description_zh: "这是问题4的描述",
       meta: { difficulty: DIFFICULTY_EASY, recommend: RECOMMEND_BASIC },
-      info: { updateTime: "2023-10-01T12:00:00Z", status: STATUS_PLAN },
+      info: { updateTime: "2023-10-01T12:00:00Z", status: STATUS_DONE },
       tags: ["数组"]
     });
     problems.push({

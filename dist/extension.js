@@ -450,7 +450,7 @@ function loadProblems(problemsPath) {
             description: "这是问题3的描述",
             description_zh: "这是问题3的描述",
             meta: { difficulty: constants_1.DIFFICULTY_HARD, recommend: constants_1.RECOMMEND_CHALLENGE },
-            info: { updateTime: "2023-10-01T12:00:00Z", status: constants_1.STATUS_PLAN },
+            info: { updateTime: "2023-10-01T12:00:00Z", status: constants_1.STATUS_DOING },
             tags: ["数组"]
         });
         problems.push({
@@ -459,7 +459,7 @@ function loadProblems(problemsPath) {
             description: "这是问题4的描述",
             description_zh: "这是问题4的描述",
             meta: { difficulty: constants_1.DIFFICULTY_EASY, recommend: constants_1.RECOMMEND_BASIC },
-            info: { updateTime: "2023-10-01T12:00:00Z", status: constants_1.STATUS_PLAN },
+            info: { updateTime: "2023-10-01T12:00:00Z", status: constants_1.STATUS_DONE },
             tags: ["数组"]
         });
         problems.push({
@@ -779,7 +779,7 @@ class ProblemItem extends vscode.TreeItem {
     collapsibleState;
     constructor(name, description_info, description_info_zh, meta, info, tags, filePath, collapsibleState = vscode.TreeItemCollapsibleState.None) {
         // label + description 会被用来展示
-        super(name, collapsibleState);
+        super(name.slice(0, 20), collapsibleState);
         this.name = name;
         this.description_info = description_info;
         this.description_info_zh = description_info_zh;
@@ -788,8 +788,18 @@ class ProblemItem extends vscode.TreeItem {
         this.tags = tags;
         this.filePath = filePath;
         this.collapsibleState = collapsibleState;
-        this.description = `${this.meta.difficulty} - ${this.meta.recommend} - ${this.info.status} `;
-        this.tooltip = `${this.description_info_zh} - ${this.info.updateTime} - ${this.tags}`;
+        this.description = `${this.meta.difficulty.slice(0, 4).padEnd(4, ' ')} - ${this.meta.recommend.slice(0, 4).padEnd(4, ' ')} - ${this.info.status.slice(0, 5).padEnd(5, ' ')} - ${this.info.updateTime.slice(0, 10).padEnd(10, ' ')}`;
+        this.tooltip = `${this.description_info_zh} - ${this.tags}`;
+        // 设置状态图标
+        if (info.status === 'done') {
+            this.iconPath = new vscode.ThemeIcon('check', new vscode.ThemeColor('charts.green'));
+        }
+        else if (info.status === 'doing') {
+            this.iconPath = new vscode.ThemeIcon('edit', new vscode.ThemeColor('charts.yellow'));
+        }
+        else {
+            this.iconPath = new vscode.ThemeIcon('compass');
+        }
     }
 }
 exports.ProblemItem = ProblemItem;

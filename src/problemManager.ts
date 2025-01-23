@@ -7,7 +7,7 @@ export class ProblemDataProvider implements vscode.TreeDataProvider<ProblemItem>
     private context: vscode.ExtensionContext;
 
     private _onDidChangeTreeData: vscode.EventEmitter<ProblemItem | undefined | void> =
-    new vscode.EventEmitter<ProblemItem | undefined | void>();
+        new vscode.EventEmitter<ProblemItem | undefined | void>();
 
     readonly onDidChangeTreeData: vscode.Event<ProblemItem | undefined | void> = this._onDidChangeTreeData.event;
 
@@ -62,10 +62,19 @@ export class ProblemItem extends vscode.TreeItem {
         public readonly filePath: string,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.None
     ) {
-
         // label + description 会被用来展示
-        super(name, collapsibleState);
-        this.description = `${this.meta.difficulty} - ${this.meta.recommend} - ${this.info.status} `;
-        this.tooltip = `${this.description_info_zh} - ${this.info.updateTime} - ${this.tags}`;
+        super(name.slice(0, 20), collapsibleState);
+        this.description = `${this.meta.difficulty.slice(0, 4).padEnd(4, ' ')} - ${this.meta.recommend.slice(0, 4).padEnd(4, ' ')} - ${this.info.status.slice(0, 5).padEnd(5, ' ')} - ${this.info.updateTime.slice(0, 10).padEnd(10, ' ')}`;
+        this.tooltip = `${this.description_info_zh} - ${this.tags}`;
+
+        // 设置状态图标
+        if (info.status === 'done') {
+            this.iconPath = new vscode.ThemeIcon('check', new vscode.ThemeColor('charts.green'));
+        }
+        else if (info.status === 'doing') {
+            this.iconPath = new vscode.ThemeIcon('edit', new vscode.ThemeColor('charts.yellow'));
+        } else {
+            this.iconPath = new vscode.ThemeIcon('compass');
+        }
     }
 }
