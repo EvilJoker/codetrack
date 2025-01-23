@@ -31,20 +31,31 @@ export class FilterViewProvider implements vscode.WebviewViewProvider {
     // 监听刷新命令
     vscode.commands.registerCommand('codetrack.refresh_filterView', () => {
       this.refresh();
+      webviewView.webview.html = this.getHtmlForWebview();
+      // 创建匿名异步函数来处理 getHtmlForWebview
+      (async () => {
+        try {
+          const htmlContent = await this.getHtmlForWebview();
+          webviewView.webview.html = htmlContent;
+        } catch (error) {
+          logger.error("Failed to get HTML for webview:" + error);
+          vscode.window.showErrorMessage("Failed to load webview content.");
+        }
+      })();
     });
 
-     // 监听 Webview 可见性变化
-  webviewView.onDidChangeVisibility(() => {
-    if (webviewView.visible) {
-      // console.log('Webview is visible');
+    // 监听 Webview 可见性变化
+    webviewView.onDidChangeVisibility(() => {
+      if (webviewView.visible) {
+        // console.log('Webview is visible');
 
-      // 恢复状态或执行其他操作
-    } else {
-      // console.log('Webview is hidden');
-      // 更新 html 页面
-    
-    }
-  });
+        // 恢复状态或执行其他操作
+      } else {
+        // console.log('Webview is hidden');
+        // 更新 html 页面
+
+      }
+    });
 
     // 监听来自 Webview 的消息
     webviewView.webview.onDidReceiveMessage((message) => {
@@ -58,14 +69,16 @@ export class FilterViewProvider implements vscode.WebviewViewProvider {
           break;
         case 'updatePath':
           let dir = message.path.trim();
-          if (dir!== '' && dir!==globalCache.problemDir) {
+          if (dir !== '' && dir !== globalCache.problemDir) {
             globalCache.problemDir = dir;
             globalCache.isInit = true; // 标记路径是否变更
+            globalCache.tags = [];
+            globalCache.filtertags = [];
           }
           break;
         case 'additem':
           let itempath = message.path.trim();
-          if (itempath!== '') {
+          if (itempath !== '') {
             this.createProblem(itempath);
           }
           break;
@@ -75,40 +88,40 @@ export class FilterViewProvider implements vscode.WebviewViewProvider {
   }
 
   private createProblem(itempath: string) {
-        // 检查目录是否合法
-        if (!fs.existsSync(itempath) || !fs.lstatSync(itempath).isDirectory()) {
-            vscode.window.showErrorMessage('指定的路径不是一个合法的目录');
-            return;
-        }
-
-        // 检查目录下是否存在 meta.json 文件
-        const metaJsonPath = path.join(itempath, 'meta.json');
-        if (fs.existsSync(metaJsonPath)) {
-            vscode.window.showErrorMessage('目录下已经存在 meta.json 文件');
-            return;
-        }
-
-        // 创建 meta.json 文件
-        const metaJsonContent = {
-            "id": "1",
-            "name": "Two Sum",
-            "name_zh": "Two Sum",
-            "description": "Given an array of integers, return indices of the two numbers such that they add up to a specific target.",
-            "description_zh": "Given an array of integers, return indices of the two numbers such that they add up to a specific target.",
-            "meta": {
-                "difficulty": "easy",
-                "recommend": "basic"
-            },
-            "info": {
-                "updateTime": "2023-10-01T12:00:00Z",
-                "status": "plan"
-            },
-            "tags": ["array", "hash-table"]
-        };
-
-        fs.writeFileSync(metaJsonPath, JSON.stringify(metaJsonContent, null, 2));
-        vscode.window.showInformationMessage('meta.json 文件已成功创建');
+    // 检查目录是否合法
+    if (!fs.existsSync(itempath) || !fs.lstatSync(itempath).isDirectory()) {
+      vscode.window.showErrorMessage('指定的路径不是一个合法的目录');
+      return;
     }
+
+    // 检查目录下是否存在 meta.json 文件
+    const metaJsonPath = path.join(itempath, 'meta.json');
+    if (fs.existsSync(metaJsonPath)) {
+      vscode.window.showErrorMessage('目录下已经存在 meta.json 文件');
+      return;
+    }
+
+    // 创建 meta.json 文件
+    const metaJsonContent = {
+      "id": "1",
+      "name": "Two Sum",
+      "name_zh": "Two Sum",
+      "description": "Given an array of integers, return indices of the two numbers such that they add up to a specific target.",
+      "description_zh": "Given an array of integers, return indices of the two numbers such that they add up to a specific target.",
+      "meta": {
+        "difficulty": "easy",
+        "recommend": "basic"
+      },
+      "info": {
+        "updateTime": "2023-10-01T12:00:00Z",
+        "status": "plan"
+      },
+      "tags": ["array", "hash-table"]
+    };
+
+    fs.writeFileSync(metaJsonPath, JSON.stringify(metaJsonContent, null, 2));
+    vscode.window.showInformationMessage('meta.json 文件已成功创建');
+  }
 
   private refresh() {
     // 加载数据
@@ -338,12 +351,15 @@ export function loadProblems(problemsPath: string): any[] {
       (globalCache.filters.difficulty_hard || problem.meta.difficulty !== DIFFICULTY_HARD) &&
       (problem.tags.some((tag: string) => globalCache.filtertags.includes(tag)));
   });
-  logger.info("cache:" + JSON.stringify(globalCache,null,2));
-  logger.info("result:" + JSON.stringify(filteredProblems,null,2));
+  logger.info("cache:" + JSON.stringify(globalCache, null, 2));
+  logger.info("result:" + JSON.stringify(filteredProblems, null, 2));
   // 更新 globalCache.tags
   globalCache.problems = filteredProblems;
 
-  return filteredProblems;
+  const sorted = sortProblems(filteredProblems);
+
+
+  return sorted;
 }
 
 // 新增函数：提炼所有 problems 中的 tags 形成一个不重复的 tags 列表
@@ -355,4 +371,63 @@ function getUniqueTags(problems: any[]): string[] {
     });
   });
   return Array.from(tagsSet);
+}
+
+function sortProblems(problems: any[]): any[] {
+  // 获取排序顺序
+  const order = globalCache.filters.order === 'ascending' ? 1 : -1;
+
+  // 定义状态、推荐和难度的排序规则
+  const statusOrder: { [key: string]: number } = {
+    [STATUS_PLAN]: 1,
+    [STATUS_DOING]: 2,
+    [STATUS_DONE]: 3
+  };
+
+  const recommendOrder: { [key: string]: number } = {
+    [RECOMMEND_BASIC]: 1,
+    [RECOMMEND_NEED]: 2,
+    [RECOMMEND_CHALLENGE]: 3
+  };
+
+  const difficultyOrder: { [key: string]: number } = {
+    [DIFFICULTY_EASY]: 1,
+    [DIFFICULTY_MEDIUM]: 2,
+    [DIFFICULTY_HARD]: 3
+  };
+
+  // 定义排序规则
+  const sortRules = [
+    (a: any, b: any) => {
+      const tagA = a.tags.length > 0 ? a.tags[0] : '';
+      const tagB = b.tags.length > 0 ? b.tags[0] : '';
+      return tagA.localeCompare(tagB) * order;
+    },
+    (a: any, b: any) => {
+      const statusA = statusOrder[a.info.status as keyof typeof statusOrder];
+      const statusB = statusOrder[b.info.status as keyof typeof statusOrder];
+      return (statusA - statusB) * order;
+    },
+    (a: any, b: any) => {
+      const recommendA = recommendOrder[a.meta.recommend as keyof typeof recommendOrder];
+      const recommendB = recommendOrder[b.meta.recommend as keyof typeof recommendOrder];
+      return (recommendA - recommendB) * order;
+    },
+    (a: any, b: any) => {
+      const difficultyA = difficultyOrder[a.meta.difficulty as keyof typeof difficultyOrder];
+      const difficultyB = difficultyOrder[b.meta.difficulty as keyof typeof difficultyOrder];
+      return (difficultyA - difficultyB) * order;
+    }
+  ];
+
+  // 进行排序
+  return problems.sort((a, b) => {
+    for (const rule of sortRules) {
+      const result = rule(a, b);
+      if (result !== 0) {
+        return result;
+      }
+    }
+    return 0;
+  });
 }

@@ -190,6 +190,18 @@ class FilterViewProvider {
         // 监听刷新命令
         vscode.commands.registerCommand('codetrack.refresh_filterView', () => {
             this.refresh();
+            webviewView.webview.html = this.getHtmlForWebview();
+            // 创建匿名异步函数来处理 getHtmlForWebview
+            (async () => {
+                try {
+                    const htmlContent = await this.getHtmlForWebview();
+                    webviewView.webview.html = htmlContent;
+                }
+                catch (error) {
+                    logger_1.logger.error("Failed to get HTML for webview:" + error);
+                    vscode.window.showErrorMessage("Failed to load webview content.");
+                }
+            })();
         });
         // 监听 Webview 可见性变化
         webviewView.onDidChangeVisibility(() => {
@@ -217,6 +229,8 @@ class FilterViewProvider {
                     if (dir !== '' && dir !== globalCache_1.globalCache.problemDir) {
                         globalCache_1.globalCache.problemDir = dir;
                         globalCache_1.globalCache.isInit = true; // 标记路径是否变更
+                        globalCache_1.globalCache.tags = [];
+                        globalCache_1.globalCache.filtertags = [];
                     }
                     break;
                 case 'additem':
@@ -483,7 +497,8 @@ function loadProblems(problemsPath) {
     logger_1.logger.info("result:" + JSON.stringify(filteredProblems, null, 2));
     // 更新 globalCache.tags
     globalCache_1.globalCache.problems = filteredProblems;
-    return filteredProblems;
+    const sorted = sortProblems(filteredProblems);
+    return sorted;
 }
 // 新增函数：提炼所有 problems 中的 tags 形成一个不重复的 tags 列表
 function getUniqueTags(problems) {
@@ -494,6 +509,59 @@ function getUniqueTags(problems) {
         });
     });
     return Array.from(tagsSet);
+}
+function sortProblems(problems) {
+    // 获取排序顺序
+    const order = globalCache_1.globalCache.filters.order === 'ascending' ? 1 : -1;
+    // 定义状态、推荐和难度的排序规则
+    const statusOrder = {
+        [constants_1.STATUS_PLAN]: 1,
+        [constants_1.STATUS_DOING]: 2,
+        [constants_1.STATUS_DONE]: 3
+    };
+    const recommendOrder = {
+        [constants_1.RECOMMEND_BASIC]: 1,
+        [constants_1.RECOMMEND_NEED]: 2,
+        [constants_1.RECOMMEND_CHALLENGE]: 3
+    };
+    const difficultyOrder = {
+        [constants_1.DIFFICULTY_EASY]: 1,
+        [constants_1.DIFFICULTY_MEDIUM]: 2,
+        [constants_1.DIFFICULTY_HARD]: 3
+    };
+    // 定义排序规则
+    const sortRules = [
+        (a, b) => {
+            const tagA = a.tags.length > 0 ? a.tags[0] : '';
+            const tagB = b.tags.length > 0 ? b.tags[0] : '';
+            return tagA.localeCompare(tagB) * order;
+        },
+        (a, b) => {
+            const statusA = statusOrder[a.info.status];
+            const statusB = statusOrder[b.info.status];
+            return (statusA - statusB) * order;
+        },
+        (a, b) => {
+            const recommendA = recommendOrder[a.meta.recommend];
+            const recommendB = recommendOrder[b.meta.recommend];
+            return (recommendA - recommendB) * order;
+        },
+        (a, b) => {
+            const difficultyA = difficultyOrder[a.meta.difficulty];
+            const difficultyB = difficultyOrder[b.meta.difficulty];
+            return (difficultyA - difficultyB) * order;
+        }
+    ];
+    // 进行排序
+    return problems.sort((a, b) => {
+        for (const rule of sortRules) {
+            const result = rule(a, b);
+            if (result !== 0) {
+                return result;
+            }
+        }
+        return 0;
+    });
 }
 
 
