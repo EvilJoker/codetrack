@@ -17,7 +17,9 @@ export const globalCache = {
         order: ORDER_ASC
     } ,
     tags:[] as string[],
-    filtertags:[] as string[],
+    filterTags:[] as string[],
+    categorys:[] as string[],
+    filterCategorys:[] as string[],
     isInit: true, // 是否切换过目录
     problems:[] as Problem[],
     workspacepath: "",

@@ -32,8 +32,8 @@ export class FilterViewProvider implements vscode.WebviewViewProvider {
     // 监听刷新命令
     vscode.commands.registerCommand('codetrack.refresh_filterView', () => {
       this.refresh();
-      webviewView.webview.html = this.getHtmlForWebview();
-      // 创建匿名异步函数来处理 getHtmlForWebview
+      // webviewView.webview.html = this.getHtmlForWebview();
+      // // 创建匿名异步函数来处理 getHtmlForWebview
       (async () => {
         try {
           const htmlContent = await this.getHtmlForWebview();
@@ -74,7 +74,9 @@ export class FilterViewProvider implements vscode.WebviewViewProvider {
             globalCache.problemDir = dir;
             globalCache.isInit = true; // 标记路径是否变更
             globalCache.tags = [];
-            globalCache.filtertags = [];
+            globalCache.filterTags = [];
+            globalCache.categorys = [];
+            globalCache.filterCategorys = [];
           }
           break;
         case 'additem':
@@ -117,6 +119,7 @@ export class FilterViewProvider implements vscode.WebviewViewProvider {
         "updateTime": "2023-10-01T12:00:00Z",
         "status": "plan"
       },
+      "category": "数组", // 修正拼写错误
       "tags": ["array", "hash-table"]
     };
 
@@ -124,15 +127,8 @@ export class FilterViewProvider implements vscode.WebviewViewProvider {
     vscode.window.showInformationMessage('meta.json 文件已成功创建');
   }
 
-  private refresh() {
-    // 加载数据
-    LoadProblems(globalCache.workspacepath + globalCache.problemDir);
-    // 发送消息给其他视图，让它们自行刷新
-    EventManager.fireEvent(FILTEREVENT, globalCache.filters);
-
-  }
-
   private getHtmlForWebview(): string {
+    let debuguse = globalCache;
     const filters = globalCache.filters || {};
     return `
         <!DOCTYPE html>
@@ -178,7 +174,11 @@ export class FilterViewProvider implements vscode.WebviewViewProvider {
                 <label><input type="radio" name="order" value="descending" ${filters.order === 'descending' ? 'checked' : ''}> ${ORDER_DESC_ZH}</label>
                 <hr>
                 <label>标签：</label>
-                 ${globalCache.tags.map(tag => `<label><input type="checkbox" id="tag_${tag}" ${globalCache.filtertags.includes(tag) ? 'checked' : ''}> ${tag}</label>`).join('')}
+                 ${globalCache.tags.map(tag => `<label><input type="checkbox" id="tag_${tag}" ${globalCache.filterTags.includes(tag) ? 'checked' : ''}> ${tag}</label>`).join('')}
+                <hr>
+                <label>分类：</label>
+                ${globalCache.categorys.map(category => `<label><input type="checkbox" id="category_${category}" ${globalCache.filterCategorys.includes(category) ? 'checked' : ''}> ${category}</label>`).join('')}
+                               
                 <hr>
                 <button id="addItem">新增</button>
                 <input type="input" id="itemPath" placeholder="输入路径, 生成题目元数据文件" style="width: 300px;" />
@@ -227,6 +227,15 @@ export class FilterViewProvider implements vscode.WebviewViewProvider {
     `;
   }
 
+
+  private refresh() {
+    // 加载数据
+    LoadProblems(globalCache.workspacepath + globalCache.problemDir);
+    // 发送消息给其他视图，让它们自行刷新
+    EventManager.fireEvent(FILTEREVENT, globalCache.filters);
+   
+
+  }
   // 修改 refreshConfig 函数，使其接受一个 map 值并更新 filters 变量
   private refreshConfig(filters: { [key: string]: any }) {
     globalCache.filters.recommend_basic = filters.recommend_basic !== undefined ? filters.recommend_basic : true;
@@ -241,14 +250,21 @@ export class FilterViewProvider implements vscode.WebviewViewProvider {
     globalCache.filters.order = filters.order !== undefined ? filters.order : ORDER_ASC;
     console.log("refreshconfig");
     // 更新 tag
-    globalCache.filtertags = [];
+    globalCache.filterTags = [];
     for (const key in filters) {
       if (key.startsWith('tag_') && filters[key] === true) {
         let tag_value = key.substring(4);
-        globalCache.filtertags.push(tag_value); // 去掉 'tag_' 前缀
+        globalCache.filterTags.push(tag_value); // 去掉 'tag_' 前缀
       }
     }
-    console.log(globalCache.filtertags);
+    globalCache.filterCategorys = [];
+    for (const key in filters) {
+      if (key.startsWith('category_') && filters[key] === true) {
+        let cata_value = key.substring(9);
+        globalCache.filterCategorys.push(cata_value); // 去掉 'tag_' 前缀
+      }
+    }
+    console.log(globalCache.filterTags);
 
   }
 

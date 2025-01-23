@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { globalCache } from "../cache/globalCache";
 import { DIFFICULTY_EASY, RECOMMEND_BASIC, STATUS_PLAN, DIFFICULTY_MEDIUM, RECOMMEND_NEED, DIFFICULTY_HARD, RECOMMEND_CHALLENGE, STATUS_DOING, STATUS_DONE } from "../constants/constants";
-
+import * as vscode from 'vscode';
 // 定义 Problem 接口
 export class Problem {
     name: string;
@@ -64,17 +64,21 @@ export function LoadProblems(problemsPath: string): Problem[] {
                 const fileContent = fs.readFileSync(filePath, 'utf8');
                 const problem = JSON.parse(fileContent);
                 // 修改问题对象以匹配新的数据结构
-                problems.push(new Problem( // 修改: 使用 Problem 类的构造函数
-                    problem.name,
-                    problem.name_zh,
-                    problem.description,
-                    problem.description_zh,
-                    problem.meta,
-                    problem.info,
-                    problem.tags,
-                    path.join(problemsPath, file),
-                    problem.category // 假设 meta.json 中有 category 字段
-                ));
+                try {
+                    problems.push(new Problem( // 修改: 使用 Problem 类的构造函数
+                        problem.name,
+                        problem.name_zh,
+                        problem.description,
+                        problem.description_zh,
+                        problem.meta,
+                        problem.info,
+                        problem.tags,
+                        path.join(problemsPath, file),
+                        problem.category // 假设 meta.json 中有 category 字段
+                    ));
+                } catch (error) {
+                    vscode.window.showErrorMessage(""+error);
+                }
             }
         });
     } else {
@@ -87,8 +91,8 @@ export function LoadProblems(problemsPath: string): Problem[] {
             { difficulty: DIFFICULTY_EASY, recommend: RECOMMEND_BASIC },
             { updateTime: "2023-10-01T12:00:00Z", status: STATUS_PLAN },
             ["数组"],
-            "数组",
             "path",
+            "数组",
         ));
         problems.push(new Problem(
             "问题2",
@@ -98,8 +102,8 @@ export function LoadProblems(problemsPath: string): Problem[] {
             { difficulty: DIFFICULTY_MEDIUM, recommend: RECOMMEND_NEED },
             { updateTime: "2023-10-01T12:00:00Z", status: STATUS_PLAN },
             ["哈希表", "数组"],
-            "哈希表",
             "path",
+            "哈希表",
         ));
         problems.push(new Problem(
             "问题3",
@@ -109,8 +113,8 @@ export function LoadProblems(problemsPath: string): Problem[] {
             { difficulty: DIFFICULTY_HARD, recommend: RECOMMEND_CHALLENGE },
             { updateTime: "2023-10-01T12:00:00Z", status: STATUS_DOING },
             ["数组"],
-            "数组",
             "path",
+            "数组",
         ));
         problems.push(new Problem(
             "问题4",
@@ -120,8 +124,8 @@ export function LoadProblems(problemsPath: string): Problem[] {
             { difficulty: DIFFICULTY_EASY, recommend: RECOMMEND_BASIC },
             { updateTime: "2023-10-01T12:00:00Z", status: STATUS_DONE },
             ["哈希表"],
-            "数组",
             "path",
+            "数组",
         ));
         problems.push(new Problem(
             "问题5",
@@ -131,16 +135,20 @@ export function LoadProblems(problemsPath: string): Problem[] {
             { difficulty: DIFFICULTY_MEDIUM, recommend: RECOMMEND_NEED },
             { updateTime: "2023-10-01T12:00:00Z", status: STATUS_PLAN },
             ["哈希表"],
-            "数组",
             "path",
+            "数组",
         ));
     }
+    let debuguse = globalCache;
     // 提炼所有 problems 中的 tags 形成一个不重复的 tags 列表
     const allTags = getUniqueTags(problems);
     globalCache.tags = allTags;
+    const allCata = getUniqueCatagory(problems);
+    globalCache.categorys = allCata;
     if (globalCache.isInit) {
         // 第一次初始化
-        globalCache.filtertags = allTags;
+        globalCache.filterTags = allTags;
+        globalCache.filterCategorys = allCata;
         globalCache.isInit = false;
     }
 
@@ -155,7 +163,8 @@ export function LoadProblems(problemsPath: string): Problem[] {
             (globalCache.filters.difficulty_easy || problem.meta.difficulty !== DIFFICULTY_EASY) &&
             (globalCache.filters.difficulty_mid || problem.meta.difficulty !== DIFFICULTY_MEDIUM) &&
             (globalCache.filters.difficulty_hard || problem.meta.difficulty !== DIFFICULTY_HARD) &&
-            (problem.tags.some((tag: string) => globalCache.filtertags.includes(tag)));
+            (problem.tags.some((tag: string) => globalCache.filterTags.includes(tag)))&&
+            (globalCache.filterCategorys.includes(problem.category));
     });
     logger.info("cache:" + JSON.stringify(globalCache, null, 2));
     logger.info("result:" + JSON.stringify(filteredProblems, null, 2));
@@ -177,6 +186,15 @@ function getUniqueTags(problems: Problem[]): string[] {
         });
     });
     return Array.from(tagsSet);
+}
+
+// 新增函数：提炼所有 problems 中的 tags 形成一个不重复的 tags 列表
+function getUniqueCatagory(problems: Problem[]): string[] {
+    const cataSet = new Set<string>();
+    problems.forEach(problem => {
+        cataSet.add(problem.category);
+    });
+    return Array.from(cataSet);
 }
 
 function sortProblems(problems: Problem[]): Problem[] {

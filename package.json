@@ -74,7 +74,7 @@
         "view/item/context": [
             {
                 "command": "codetrack.openProblem",
-                "when": "view == problemListView",
+                "when": "view == problemListView && viewItem == ProblemItem",
                 "group": "inline",
                 "icon": "$(go-to-file)"
             }
