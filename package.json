@@ -44,6 +44,11 @@
             "command": "codetrack.runProblem",
             "title": "执行目录下run.sh",
             "icon": "$(play)"
+        },
+        {
+            "command": "codetrack.bookProblem",
+            "title": "标记当前",
+            "icon": "$(bookmark)"
         }
     ],
     "viewsContainers": {
@@ -86,8 +91,14 @@
             {
                 "command": "codetrack.runProblem",
                 "when": "view == problemListView && viewItem == ProblemItem",
-                "group": "inline",
-                "icon": "$(go-to-file)"
+                "group": "inline"
+ 
+            },
+            {
+                "command": "codetrack.bookProblem",
+                "when": "view == problemListView && viewItem == ProblemItem",
+                "group": "inline"
+            
             }
         ]
     }

@@ -22,6 +22,8 @@ export const globalCache = {
     filterCategorys:[] as string[],
     isInit: true, // 是否切换过目录
     problems:[] as Problem[],
+    bookProblemName : "",
+    bookCategoryName : "",
     workspacepath: "",
     problemDir: "problems"
     

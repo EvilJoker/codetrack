@@ -26,12 +26,22 @@ export class ProblemDataProvider implements vscode.TreeDataProvider<ProblemItem 
         });
     }
 
+    // 切换某个问题项的状态并刷新树视图
+    toggleProblemStatus(problem: ProblemItem) {
+        // 更新 全局标记
+        globalCache.bookProblemName = problem.name;
+        globalCache.bookCategoryName = problem.category;
+
+        this._onDidChangeTreeData.fire();  // 刷新树
+    }
+
     getTreeItem(element: ProblemItem | CategoryItem): vscode.TreeItem {
         return element;
     }
 
     getChildren(element?: ProblemItem | CategoryItem): Thenable<(ProblemItem | CategoryItem)[]> {
         if (element instanceof CategoryItem) {
+
             // 如果当前元素是 CategoryItem，则返回该分类下的题目
             return Promise.resolve(element.problems.map(problem => new ProblemItem(
                 problem.name,
@@ -72,16 +82,21 @@ export class CategoryItem extends vscode.TreeItem {
         public readonly problems: Problem[],
         public readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Collapsed
     ) {
-        let count =0;
+        let count = 0;
         problems.map(problem => {
-            if (problem.info.status === STATUS_DONE){
+            if (problem.info.status === STATUS_DONE) {
                 count++;
             }
         });
 
-        let label = name + `  done/all：${count}/${problems.length} `;
+        let label = name + `  done/all: ${count}/${problems.length} `;
         super(label, collapsibleState);
         this.contextValue = 'CategoryItem'; // 添加 contextValue
+
+         // 设置状态图标
+         if (globalCache.bookCategoryName === this.name) {
+            this.iconPath = new vscode.ThemeIcon('bookmark', new vscode.ThemeColor('charts.orange'));
+        }
     }
 }
 
@@ -104,13 +119,15 @@ export class ProblemItem extends vscode.TreeItem {
         this.contextValue = 'ProblemItem'; // 添加 contextValue
 
         // 设置状态图标
-        if (info.status === 'done') {
+        if (globalCache.bookProblemName === this.name) {
+            this.iconPath = new vscode.ThemeIcon('bookmark', new vscode.ThemeColor('charts.orange'));
+        }else if (info.status === 'done') {
             this.iconPath = new vscode.ThemeIcon('check', new vscode.ThemeColor('charts.green'));
-        }
-        else if (info.status === 'doing') {
+        }else if (info.status === 'doing') {
             this.iconPath = new vscode.ThemeIcon('edit', new vscode.ThemeColor('charts.yellow'));
         } else {
             this.iconPath = new vscode.ThemeIcon('compass');
         }
     }
+
 }

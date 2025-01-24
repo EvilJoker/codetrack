@@ -76,7 +76,16 @@ export function activate(context: vscode.ExtensionContext) {
             });
         }
     });
-    context.subscriptions.push(disposableRunProblem);
+
+    // 注册 bookProblem 命令 标记进展题目
+    const disposableBookProblem = vscode.commands.registerCommand('codetrack.bookProblem', (problemItem: any) => {
+        
+        if (problemItem && problemItem.filePath) {
+            // 更新图标
+            problemDataProvider.toggleProblemStatus(problemItem);
+        }
+    });
+    context.subscriptions.push(disposableBookProblem);
 
     // 启动一个定时器，每隔 10 秒调用一次 periodicFunction
     intervalId = setInterval(() => SavetoDb(context), 10000);
