@@ -77,7 +77,7 @@ export function LoadProblems(problemsPath: string): Problem[] {
                         problem.category // 假设 meta.json 中有 category 字段
                     ));
                 } catch (error) {
-                    vscode.window.showErrorMessage(""+error);
+                    vscode.window.showErrorMessage(path.join(problemsPath, file)+ " " +error);
                 }
             }
         });
