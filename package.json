@@ -49,6 +49,11 @@
             "command": "codetrack.bookProblem",
             "title": "标记当前",
             "icon": "$(bookmark)"
+        },
+        {
+            "command": "codetrack.editProblem",
+            "title": "编辑 meta.json",
+            "icon": "$(gear)"
         }
     ],
     "viewsContainers": {
@@ -96,6 +101,12 @@
             },
             {
                 "command": "codetrack.bookProblem",
+                "when": "view == problemListView && viewItem == ProblemItem",
+                "group": "inline"
+            
+            },
+            {
+                "command": "codetrack.editProblem",
                 "when": "view == problemListView && viewItem == ProblemItem",
                 "group": "inline"
             

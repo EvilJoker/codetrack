@@ -87,6 +87,31 @@ export function activate(context: vscode.ExtensionContext) {
     });
     context.subscriptions.push(disposableBookProblem);
 
+
+    // 注册 bookProblem 命令 标记进展题目
+    const disposableEditProblem = vscode.commands.registerCommand('codetrack.editProblem',  async (problemItem: any) => {
+        if (problemItem && problemItem.filePath) {
+            const uri = vscode.Uri.file(problemItem.filePath+"/meta.json");
+
+            try {
+                // 打开文件为文本文档
+                const document = await vscode.workspace.openTextDocument(uri);
+
+                // 在右侧编辑器显示
+                await vscode.window.showTextDocument(document, {
+                    viewColumn: vscode.ViewColumn.Beside, // 在右侧打开文件
+                    preserveFocus: false, // 聚焦到新打开的文件
+                    preview: true, // 以预览模式打开（防止占用标签页）
+                });
+
+                logger.info(`Successfully opened ${problemItem.filePath} in the editor.`);
+            } catch (error) {
+                logger.error(`Failed to open ${problemItem.filePath}: ${error}`);
+            }
+        }
+    });
+    context.subscriptions.push(disposableEditProblem);
+
     // 启动一个定时器，每隔 10 秒调用一次 periodicFunction
     intervalId = setInterval(() => SavetoDb(context), 10000);
 
