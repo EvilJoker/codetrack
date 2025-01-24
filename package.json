@@ -39,6 +39,11 @@
             "command": "codetrack.openProblem",
             "title": "打开题目",
             "icon": "$(go-to-file)"
+        },
+        {
+            "command": "codetrack.runProblem",
+            "title": "执行目录下run.sh",
+            "icon": "$(play)"
         }
     ],
     "viewsContainers": {
@@ -74,6 +79,12 @@
         "view/item/context": [
             {
                 "command": "codetrack.openProblem",
+                "when": "view == problemListView && viewItem == ProblemItem",
+                "group": "inline",
+                "icon": "$(go-to-file)"
+            },
+            {
+                "command": "codetrack.runProblem",
                 "when": "view == problemListView && viewItem == ProblemItem",
                 "group": "inline",
                 "icon": "$(go-to-file)"

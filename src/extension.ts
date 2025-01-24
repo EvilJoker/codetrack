@@ -63,6 +63,21 @@ export function activate(context: vscode.ExtensionContext) {
     });
     context.subscriptions.push(disposableOpenProblem);
 
+    // 注册 runProblem 命令
+    const disposableRunProblem = vscode.commands.registerCommand('codetrack.runProblem', (problemItem: any) => {
+        if (problemItem && problemItem.filePath) {
+            const uri = vscode.Uri.file(problemItem.filePath);
+            // 打开控制台，并执行 目录下 bash ./run.sh
+            vscode.commands.executeCommand('workbench.action.terminal.new').then(() => {
+                const terminal = vscode.window.activeTerminal;
+                if (terminal) {
+                    terminal.sendText(`cd "${uri.fsPath}" && bash ./run.sh`);
+                }
+            });
+        }
+    });
+    context.subscriptions.push(disposableRunProblem);
+
     // 启动一个定时器，每隔 10 秒调用一次 periodicFunction
     intervalId = setInterval(() => SavetoDb(context), 10000);
 
